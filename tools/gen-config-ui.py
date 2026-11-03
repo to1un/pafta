@@ -101,7 +101,7 @@ compass_body = ('<item><layout class="QHBoxLayout" name="compassRow"><item>'
                 '<property name="alignment"><set>Qt::AlignTop|Qt::AlignHCenter</set></property></widget></item>'
                 '<item>%s</item></layout></item>'
                 '<item>%s</item>') % (img(), compass_form, label(
-                    "Drag a window and rest the cursor: the compass opens around it. Drop on a slot to place the window. Own size puts the window back to the size it opened with. "
+                    "Drag a window and rest the cursor: the compass opens around it. Drop on a slot to place the window. Own size: the size the application first opened with, or the size you last gave it by hand. "
                     "Move away from the compass and drop to leave the window where it is. Esc cancels the move.", wrap=True))
 
 behavior_body = '<item>%s</item><item>%s</item>' % (form("behaviorForm", [

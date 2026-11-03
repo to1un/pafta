@@ -315,7 +315,7 @@
               <item>
                 <widget class="QLabel">
                   <property name="text">
-                    <string>Drag a window and rest the cursor: the compass opens around it. Drop on a slot to place the window. Own size puts the window back to the size it opened with. Move away from the compass and drop to leave the window where it is. Esc cancels the move.</string>
+                    <string>Drag a window and rest the cursor: the compass opens around it. Drop on a slot to place the window. Own size: the size the application first opened with, or the size you last gave it by hand. Move away from the compass and drop to leave the window where it is. Esc cancels the move.</string>
                   </property>
                   <property name="wordWrap">
                     <bool>true</bool>

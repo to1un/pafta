@@ -28,6 +28,7 @@ Item {
     property var hooks: ({})
     property var records: ({})   // internalId -> { frac } | { max }
     property var memory: ({})    // resourceClass -> record
+    property var naturals: ({})  // resourceClass -> { width, height }: own size
     property var drag: null
 
     function log(msg) {
@@ -118,10 +119,27 @@ Item {
         remember(w, { frac: frac });
     }
 
-    // The size the window opened with, or was last resized to by hand while free.
+    // Own size: what the application first opened with, or was last resized to by hand while free.
+    // Kept per application; null when unknown (windows already open when pafta started).
     function naturalSize(w) {
         const hook = hooks[idOf(w)];
-        return hook && hook.natural ? hook.natural : { width: w.frameGeometry.width, height: w.frameGeometry.height };
+        return hook && hook.natural ? hook.natural : null;
+    }
+
+    function setNatural(w, size) {
+        const hook = hooks[idOf(w)];
+        if (hook)
+            hook.natural = size;
+        if (w.resourceClass) {
+            naturals[String(w.resourceClass)] = size;
+            state.naturals = JSON.stringify(naturals);
+        }
+    }
+
+    // Own size centered, or the centered slot's size while the own size is unknown.
+    function naturalFrac(w, area) {
+        const size = naturalSize(w);
+        return size ? G.naturalFrac(size, area) : G.compassPlacement("c", { slots: { c: "centered" }, cw: cfg.compass.cw, ch: cfg.compass.ch }).frac;
     }
 
     function placeNatural(w, output, desktop) {
@@ -129,7 +147,7 @@ Item {
             w.tile.unmanage(w);
         w.setMaximize(false, false);
         setRestore(w, null);
-        const g = G.toAbs(G.naturalFrac(naturalSize(w), areaOf(output, desktop)), areaOf(output, desktop));
+        const area = areaOf(output, desktop), g = G.toAbs(naturalFrac(w, area), area);
         w.frameGeometry = Qt.rect(Math.round(g.x), Math.round(g.y), Math.round(g.width), Math.round(g.height));
         delete records[idOf(w)]; // it opens at its own size anyway
     }
@@ -222,7 +240,7 @@ Item {
         overlay.center = d.center || { x: 0, y: 0 };
         overlay.hot = d.hot;
         const p = d.hot ? G.compassPlacement(d.hot, cfg.compass) : null;
-        overlay.preview = !p ? null : G.toAbs(p.natural ? G.naturalFrac(naturalSize(d.window), d.area) : p.frac, d.area);
+        overlay.preview = !p ? null : G.toAbs(p.natural ? naturalFrac(d.window, d.area) : p.frac, d.area);
         overlay.visible = d.open;
     }
 
@@ -237,8 +255,8 @@ Item {
         if (hook && hook.resizing) {
             hook.resizing = false;
             // Resized by hand while free (not placed by pafta): that is its own size now.
-            if (!w.tile && w.maximizeMode === 0 && !records[idOf(w)])
-                hook.natural = { width: w.frameGeometry.width, height: w.frameGeometry.height };
+            if (!w.tile && w.maximizeMode === 0 && !records[idOf(w)] && manageable(w))
+                setNatural(w, { width: w.frameGeometry.width, height: w.frameGeometry.height });
         }
         if (!drag || drag.window !== w)
             return;
@@ -328,13 +346,15 @@ Item {
 
     // ---- windows & memory -----------------------------------------------------
 
-    function addWindow(w) {
+    // `opened`: the window is new, not one found at startup.
+    function addWindow(w, opened) {
         if (!w || !w.normalWindow || hooks[idOf(w)])
             return;
+        const known = naturals[String(w.resourceClass)];
+        hooks[idOf(w)] = hookComponent.createObject(root, { window: w, handler: root, natural: known || null });
         // Before a remembered placement is restored (deferred), so this is the size it opened with.
-        hooks[idOf(w)] = hookComponent.createObject(root, {
-            window: w, handler: root, natural: { width: w.frameGeometry.width, height: w.frameGeometry.height }
-        });
+        if (!known && opened && manageable(w))
+            setNatural(w, { width: w.frameGeometry.width, height: w.frameGeometry.height });
     }
 
     function windowClosed(w) {
@@ -363,6 +383,7 @@ Item {
         id: state
         location: StandardPaths.writableLocation(StandardPaths.GenericDataLocation) + "/pafta/state.ini"
         property string memory: "{}"
+        property string naturals: "{}"
     }
 
     // Read-only: nothing is ever set on it, so it never writes kwinrc back.
@@ -391,7 +412,7 @@ Item {
     Connections {
         target: Workspace
         function onWindowAdded(w) {
-            root.addWindow(w);
+            root.addWindow(w, true);
             if (root.cfg.remember && root.manageable(w) && root.memory[String(w.resourceClass)])
                 Qt.callLater(root.restore, w);
         }
@@ -417,12 +438,20 @@ Item {
         try {
             loadConfig();
             try {
-                memory = JSON.parse(state.memory) || {};
+                const m = JSON.parse(state.memory) || {}, n = JSON.parse(state.naturals) || {};
+                for (const k in m) { // drops records an older pafta wrote ({ layout, zone })
+                    if (m[k].max || G.validFrac(m[k].frac))
+                        memory[k] = m[k];
+                }
+                for (const k in n) {
+                    if (n[k].width > 0 && n[k].height > 0)
+                        naturals[k] = n[k];
+                }
             } catch (e) {
-                warn("could not parse remembered placements: " + e);
+                warn("could not parse the state file: " + e);
             }
             for (const w of Workspace.stackingOrder)
-                addWindow(w);
+                addWindow(w, false);
             console.info("pafta: loaded; compass " + cfg.compassSize + " " + cfg.compass.rings.join("/") + ", opens after "
                 + cfg.dwellMs + " ms, state " + state.location);
         } catch (e) {
