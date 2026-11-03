@@ -13,14 +13,40 @@
             </attribute>
             <layout class="QVBoxLayout" name="compassTabLayout">
               <item>
+                <spacer name="compassTop">
+                  <property name="orientation">
+                    <enum>Qt::Vertical</enum>
+                  </property>
+                  <property name="sizeHint">
+                    <size>
+                      <width>0</width>
+                      <height>0</height>
+                    </size>
+                  </property>
+                </spacer>
+              </item>
+              <item>
                 <layout class="QHBoxLayout" name="compassRow">
+                  <item>
+                    <spacer name="compassLeft">
+                      <property name="orientation">
+                        <enum>Qt::Horizontal</enum>
+                      </property>
+                      <property name="sizeHint">
+                        <size>
+                          <width>0</width>
+                          <height>0</height>
+                        </size>
+                      </property>
+                    </spacer>
+                  </item>
                   <item>
                     <widget class="QLabel" name="compassPreview">
                       <property name="text">
                         <string>&lt;img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMjgiIGhlaWdodD0iMzI4IiB2aWV3Qm94PSItMTY0IC0xNjQgMzI4IDMyOCIgZm9udC1mYW1pbHk9InNhbnMtc2VyaWYiIHRleHQtYW5jaG9yPSJtaWRkbGUiPjxjaXJjbGUgcj0iMTYwIiBmaWxsPSIjOGE4Zjk0IiBmaWxsLW9wYWNpdHk9IjAuMDYiIHN0cm9rZT0iIzhhOGY5NCIgc3Ryb2tlLW9wYWNpdHk9IjAuMzUiLz48Y2lyY2xlIHI9IjE0MCIgZmlsbD0iIzhhOGY5NCIgZmlsbC1vcGFjaXR5PSIwLjA1IiBzdHJva2U9IiM4YThmOTQiIHN0cm9rZS1vcGFjaXR5PSIwLjQiLz48cGF0aCBkPSJNMTM1LjIzIDM2LjIzTDE0MS4wMyAzNy43OU0xMzEuNTYgNDcuODhMMTM0LjM4IDQ4LjkxTTEyNi44OCA1OS4xN0wxMjkuNjAgNjAuNDNNMTIxLjI0IDcwLjAwTDEyNi40NCA3My4wME0xMTQuNjggODAuMzBMMTE3LjE0IDgyLjAyTTEwNy4yNSA4OS45OUwxMDkuNTQgOTEuOTJNODkuOTkgMTA3LjI1TDkxLjkyIDEwOS41NE04MC4zMCAxMTQuNjhMODIuMDIgMTE3LjE0TTcwLjAwIDEyMS4yNEw3My4wMCAxMjYuNDRNNTkuMTcgMTI2Ljg4TDYwLjQzIDEyOS42ME00Ny44OCAxMzEuNTZMNDguOTEgMTM0LjM4TTM2LjIzIDEzNS4yM0wzNy43OSAxNDEuMDNNLTM2LjIzIDEzNS4yM0wtMzcuNzkgMTQxLjAzTS00Ny44OCAxMzEuNTZMLTQ4LjkxIDEzNC4zOE0tNTkuMTcgMTI2Ljg4TC02MC40MyAxMjkuNjBNLTcwLjAwIDEyMS4yNEwtNzMuMDAgMTI2LjQ0TS04MC4zMCAxMTQuNjhMLTgyLjAyIDExNy4xNE0tODkuOTkgMTA3LjI1TC05MS45MiAxMDkuNTRNLTEwNy4yNSA4OS45OUwtMTA5LjU0IDkxLjkyTS0xMTQuNjggODAuMzBMLTExNy4xNCA4Mi4wMk0tMTIxLjI0IDcwLjAwTC0xMjYuNDQgNzMuMDBNLTEyNi44OCA1OS4xN0wtMTI5LjYwIDYwLjQzTS0xMzEuNTYgNDcuODhMLTEzNC4zOCA0OC45MU0tMTM1LjIzIDM2LjIzTC0xNDEuMDMgMzcuNzlNLTEzNS4yMyAtMzYuMjNMLTE0MS4wMyAtMzcuNzlNLTEzMS41NiAtNDcuODhMLTEzNC4zOCAtNDguOTFNLTEyNi44OCAtNTkuMTdMLTEyOS42MCAtNjAuNDNNLTEyMS4yNCAtNzAuMDBMLTEyNi40NCAtNzMuMDBNLTExNC42OCAtODAuMzBMLTExNy4xNCAtODIuMDJNLTEwNy4yNSAtODkuOTlMLTEwOS41NCAtOTEuOTJNLTg5Ljk5IC0xMDcuMjVMLTkxLjkyIC0xMDkuNTRNLTgwLjMwIC0xMTQuNjhMLTgyLjAyIC0xMTcuMTRNLTcwLjAwIC0xMjEuMjRMLTczLjAwIC0xMjYuNDRNLTU5LjE3IC0xMjYuODhMLTYwLjQzIC0xMjkuNjBNLTQ3Ljg4IC0xMzEuNTZMLTQ4LjkxIC0xMzQuMzhNLTM2LjIzIC0xMzUuMjNMLTM3Ljc5IC0xNDEuMDNNMzYuMjMgLTEzNS4yM0wzNy43OSAtMTQxLjAzTTQ3Ljg4IC0xMzEuNTZMNDguOTEgLTEzNC4zOE01OS4xNyAtMTI2Ljg4TDYwLjQzIC0xMjkuNjBNNzAuMDAgLTEyMS4yNEw3My4wMCAtMTI2LjQ0TTgwLjMwIC0xMTQuNjhMODIuMDIgLTExNy4xNE04OS45OSAtMTA3LjI1TDkxLjkyIC0xMDkuNTRNMTA3LjI1IC04OS45OUwxMDkuNTQgLTkxLjkyTTExNC42OCAtODAuMzBMMTE3LjE0IC04Mi4wMk0xMjEuMjQgLTcwLjAwTDEyNi40NCAtNzMuMDBNMTI2Ljg4IC01OS4xN0wxMjkuNjAgLTYwLjQzTTEzMS41NiAtNDcuODhMMTM0LjM4IC00OC45MU0xMzUuMjMgLTM2LjIzTDE0MS4wMyAtMzcuNzkiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzhhOGY5NCIgc3Ryb2tlLW9wYWNpdHk9IjAuNCIvPjxwYXRoIGQ9Ik05OC45OSA5OC45OUwxMDUuMzYgMTA1LjM2TS05OC45OSA5OC45OUwtMTA1LjM2IDEwNS4zNk0tOTguOTkgLTk4Ljk5TC0xMDUuMzYgLTEwNS4zNk05OC45OSAtOTguOTlMMTA1LjM2IC0xMDUuMzYiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzhhOGY5NCIgc3Ryb2tlLW9wYWNpdHk9IjAuNyIvPjxwYXRoIGQ9Ik0yNC4wMiA5Ljk1TDEyOS4zNCA1My41OE05Ljk1IDI0LjAyTDUzLjU4IDEyOS4zNE0tOS45NSAyNC4wMkwtNTMuNTggMTI5LjM0TS0yNC4wMiA5Ljk1TC0xMjkuMzQgNTMuNThNLTI0LjAyIC05Ljk1TC0xMjkuMzQgLTUzLjU4TS05Ljk1IC0yNC4wMkwtNTMuNTggLTEyOS4zNE05Ljk1IC0yNC4wMkw1My41OCAtMTI5LjM0TTI0LjAyIC05Ljk1TDEyOS4zNCAtNTMuNTgiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzhhOGY5NCIgc3Ryb2tlLW9wYWNpdHk9IjAuMiIvPjxwYXRoIGQ9Ik01OS45NSAtMjIuNDFBNjQgNjQgMCAwIDEgNTkuOTUgMjIuNDFNLTU5Ljk1IDIyLjQxQTY0IDY0IDAgMCAxIC01OS45NSAtMjIuNDFNOTUuNTQgLTM1LjcyQTEwMiAxMDIgMCAwIDEgOTUuNTQgMzUuNzJNLTk1LjU0IDM1LjcyQTEwMiAxMDIgMCAwIDEgLTk1LjU0IC0zNS43MiIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjOGE4Zjk0IiBzdHJva2Utb3BhY2l0eT0iMC41IiBzdHJva2UtZGFzaGFycmF5PSIyIDMiLz48cGF0aCBkPSJNMCAwTDQ0LjU1IDQ0LjU1TDIuODMgLTIuODNaIiBmaWxsPSIjOGE4Zjk0IiBmaWxsLW9wYWNpdHk9IjAuMyIvPjxwYXRoIGQ9Ik0wIDBMNDQuNTUgNDQuNTVMLTIuODMgMi44M1oiIGZpbGw9IiM4YThmOTQiIGZpbGwtb3BhY2l0eT0iMC4xMiIvPjxwYXRoIGQ9Ik0wIDBMLTQ0LjU1IDQ0LjU1TDIuODMgMi44M1oiIGZpbGw9IiM4YThmOTQiIGZpbGwtb3BhY2l0eT0iMC4zIi8+PHBhdGggZD0iTTAgMEwtNDQuNTUgNDQuNTVMLTIuODMgLTIuODNaIiBmaWxsPSIjOGE4Zjk0IiBmaWxsLW9wYWNpdHk9IjAuMTIiLz48cGF0aCBkPSJNMCAwTC00NC41NSAtNDQuNTVMLTIuODMgMi44M1oiIGZpbGw9IiM4YThmOTQiIGZpbGwtb3BhY2l0eT0iMC4zIi8+PHBhdGggZD0iTTAgMEwtNDQuNTUgLTQ0LjU1TDIuODMgLTIuODNaIiBmaWxsPSIjOGE4Zjk0IiBmaWxsLW9wYWNpdHk9IjAuMTIiLz48cGF0aCBkPSJNMCAwTDQ0LjU1IC00NC41NUwtMi44MyAtMi44M1oiIGZpbGw9IiM4YThmOTQiIGZpbGwtb3BhY2l0eT0iMC4zIi8+PHBhdGggZD0iTTAgMEw0NC41NSAtNDQuNTVMMi44MyAyLjgzWiIgZmlsbD0iIzhhOGY5NCIgZmlsbC1vcGFjaXR5PSIwLjEyIi8+PHBhdGggZD0iTTAgMEwxMzAuMDAgMC4wMEwwLjAwIC04LjAwWiIgZmlsbD0iIzhhOGY5NCIgZmlsbC1vcGFjaXR5PSIwLjM4Ii8+PHBhdGggZD0iTTAgMEwxMzAuMDAgMC4wMEwwLjAwIDguMDBaIiBmaWxsPSIjOGE4Zjk0IiBmaWxsLW9wYWNpdHk9IjAuMTYiLz48cGF0aCBkPSJNMCAwTDAuMDAgMTMwLjAwTDguMDAgMC4wMFoiIGZpbGw9IiM4YThmOTQiIGZpbGwtb3BhY2l0eT0iMC4zOCIvPjxwYXRoIGQ9Ik0wIDBMMC4wMCAxMzAuMDBMLTguMDAgMC4wMFoiIGZpbGw9IiM4YThmOTQiIGZpbGwtb3BhY2l0eT0iMC4xNiIvPjxwYXRoIGQ9Ik0wIDBMLTEzMC4wMCAwLjAwTDAuMDAgOC4wMFoiIGZpbGw9IiM4YThmOTQiIGZpbGwtb3BhY2l0eT0iMC4zOCIvPjxwYXRoIGQ9Ik0wIDBMLTEzMC4wMCAwLjAwTC0wLjAwIC04LjAwWiIgZmlsbD0iIzhhOGY5NCIgZmlsbC1vcGFjaXR5PSIwLjE2Ii8+PHBhdGggZD0iTTAgMEwtMC4wMCAtMTMwLjAwTC04LjAwIDAuMDBaIiBmaWxsPSIjM2RhZWU5IiBmaWxsLW9wYWNpdHk9IjAuNiIvPjxwYXRoIGQ9Ik0wIDBMLTAuMDAgLTEzMC4wMEw4LjAwIC0wLjAwWiIgZmlsbD0iIzNkYWVlOSIgZmlsbC1vcGFjaXR5PSIwLjI4Ii8+PGNpcmNsZSByPSIyMyIgZmlsbD0iIzhhOGY5NCIgZmlsbC1vcGFjaXR5PSIwLjE1IiBzdHJva2U9IiM4YThmOTQiIHN0cm9rZS1vcGFjaXR5PSIwLjYiLz48dGV4dCB4PSItMC4wIiB5PSItMTQ1LjUiIGZpbGw9IiMzZGFlZTkiIGZvbnQtc2l6ZT0iMTMiIGZvbnQtd2VpZ2h0PSJib2xkIj5OPC90ZXh0Pjx0ZXh0IHg9IjE1MC4wIiB5PSI0LjUiIGZpbGw9IiM4YThmOTQiIGZvbnQtc2l6ZT0iMTIiIGZvbnQtd2VpZ2h0PSJib2xkIj5FPC90ZXh0Pjx0ZXh0IHg9IjAuMCIgeT0iMTU0LjUiIGZpbGw9IiM4YThmOTQiIGZvbnQtc2l6ZT0iMTIiIGZvbnQtd2VpZ2h0PSJib2xkIj5TPC90ZXh0Pjx0ZXh0IHg9Ii0xNTAuMCIgeT0iNC41IiBmaWxsPSIjOGE4Zjk0IiBmb250LXNpemU9IjEyIiBmb250LXdlaWdodD0iYm9sZCI+VzwvdGV4dD48dGV4dCB4PSI0NS4wIiB5PSItOC4wIiBmaWxsPSIjOGE4Zjk0IiBmb250LXNpemU9IjEwIj7ihZM8L3RleHQ+PHRleHQgeD0iLTQ1LjAiIHk9Ii04LjAiIGZpbGw9IiM4YThmOTQiIGZvbnQtc2l6ZT0iMTAiPuKFkzwvdGV4dD48dGV4dCB4PSI4My4wIiB5PSItOC4wIiBmaWxsPSIjOGE4Zjk0IiBmb250LXNpemU9IjEwIj7CvTwvdGV4dD48dGV4dCB4PSItODMuMCIgeT0iLTguMCIgZmlsbD0iIzhhOGY5NCIgZm9udC1zaXplPSIxMCI+wr08L3RleHQ+PHRleHQgeD0iMTIxLjAiIHk9Ii04LjAiIGZpbGw9IiM4YThmOTQiIGZvbnQtc2l6ZT0iMTAiPuKFlDwvdGV4dD48dGV4dCB4PSItMTIxLjAiIHk9Ii04LjAiIGZpbGw9IiM4YThmOTQiIGZvbnQtc2l6ZT0iMTAiPuKFlDwvdGV4dD48L3N2Zz4K"&gt;</string>
                       </property>
                       <property name="alignment">
-                        <set>Qt::AlignTop|Qt::AlignHCenter</set>
+                        <set>Qt::AlignVCenter|Qt::AlignHCenter</set>
                       </property>
                     </widget>
                   </item>
@@ -34,7 +60,7 @@
                       </property>
                       <property name="sizeHint">
                         <size>
-                          <width>16</width>
+                          <width>24</width>
                           <height>0</height>
                         </size>
                       </property>
@@ -365,22 +391,25 @@
                           <property name="wordWrap">
                             <bool>true</bool>
                           </property>
+                          <property name="maximumWidth">
+                            <number>440</number>
+                          </property>
                         </widget>
                       </item>
-                      <item>
-                        <spacer name="compassSideSpacer">
-                          <property name="orientation">
-                            <enum>Qt::Vertical</enum>
-                          </property>
-                          <property name="sizeHint">
-                            <size>
-                              <width>0</width>
-                              <height>0</height>
-                            </size>
-                          </property>
-                        </spacer>
-                      </item>
                     </layout>
+                  </item>
+                  <item>
+                    <spacer name="compassRight">
+                      <property name="orientation">
+                        <enum>Qt::Horizontal</enum>
+                      </property>
+                      <property name="sizeHint">
+                        <size>
+                          <width>0</width>
+                          <height>0</height>
+                        </size>
+                      </property>
+                    </spacer>
                   </item>
                 </layout>
               </item>

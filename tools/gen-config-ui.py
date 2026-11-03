@@ -85,16 +85,24 @@ compass_form = form("compassForm", [
 
 help_text = label("Grab a window and the compass opens around the cursor; drop on a slot to place the window. "
                   "Own size is the size the application first opened with, or the size you last gave it by hand. "
-                  "Move away from the compass and drop to leave the window where it is; Esc cancels the move.", wrap=True)
+                  "Move away from the compass and drop to leave the window where it is; Esc cancels the move.", wrap=True
+                  ).replace('</widget>', '<property name="maximumWidth"><number>440</number></property></widget>')
 
-compass_body = ('<item><layout class="QHBoxLayout" name="compassRow">'
-                '<item><widget class="QLabel" name="compassPreview"><property name="text"><string>%s</string></property>'
-                '<property name="alignment"><set>Qt::AlignTop|Qt::AlignHCenter</set></property></widget></item>'
-                '<item><spacer name="compassGap"><property name="orientation"><enum>Qt::Horizontal</enum></property>'
-                '<property name="sizeType"><enum>QSizePolicy::Fixed</enum></property><property name="sizeHint"><size><width>16</width><height>0</height></size></property></spacer></item>'
-                '<item><layout class="QVBoxLayout" name="compassSide"><item>%s</item><item>%s</item>'
-                '<item><spacer name="compassSideSpacer"><property name="orientation"><enum>Qt::Vertical</enum></property><property name="sizeHint"><size><width>0</width><height>0</height></size></property></spacer></item></layout></item>'
-                '</layout></item>') % (img(), compass_form, help_text)
+def stretch(name, orientation):
+    return ('<item><spacer name="%s"><property name="orientation"><enum>Qt::%s</enum></property>'
+            '<property name="sizeHint"><size><width>0</width><height>0</height></size></property></spacer></item>') % (name, orientation)
+
+# Compass and form as one block, centered in the tab both ways (tab() adds the bottom stretch).
+compass_body = (stretch("compassTop", "Vertical")
+                + '<item><layout class="QHBoxLayout" name="compassRow">'
+                + stretch("compassLeft", "Horizontal")
+                + ('<item><widget class="QLabel" name="compassPreview"><property name="text"><string>%s</string></property>'
+                   '<property name="alignment"><set>Qt::AlignVCenter|Qt::AlignHCenter</set></property></widget></item>') % img()
+                + '<item><spacer name="compassGap"><property name="orientation"><enum>Qt::Horizontal</enum></property>'
+                  '<property name="sizeType"><enum>QSizePolicy::Fixed</enum></property><property name="sizeHint"><size><width>24</width><height>0</height></size></property></spacer></item>'
+                + '<item><layout class="QVBoxLayout" name="compassSide"><item>%s</item><item>%s</item></layout></item>' % (compass_form, help_text)
+                + stretch("compassRight", "Horizontal")
+                + '</layout></item>')
 
 behavior_body = '<item>%s</item><item>%s</item>' % (form("behaviorForm", [
     (None, check("remember", "Remember where applications were placed",
