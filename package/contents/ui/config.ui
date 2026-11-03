@@ -36,7 +36,7 @@
                       <item row="0" column="1">
                         <widget class="QSpinBox" name="kcfg_dwellMs">
                           <property name="minimum">
-                            <number>100</number>
+                            <number>0</number>
                           </property>
                           <property name="maximum">
                             <number>1000</number>
@@ -46,6 +46,12 @@
                           </property>
                           <property name="suffix">
                             <string> ms</string>
+                          </property>
+                          <property name="specialValueText">
+                            <string>Immediately</string>
+                          </property>
+                          <property name="toolTip">
+                            <string>How long the cursor rests before the compass opens. Immediately: it opens as soon as you grab the window, once per drag.</string>
                           </property>
                         </widget>
                       </item>
@@ -86,17 +92,22 @@
                         <widget class="QComboBox" name="kcfg_compassCenter">
                           <item>
                             <property name="text">
+                              <string>Own size, centered</string>
+                            </property>
+                          </item>
+                          <item>
+                            <property name="text">
                               <string>Centered window</string>
                             </property>
                           </item>
                           <item>
                             <property name="text">
-                              <string>Maximize</string>
+                              <string>Fill the screen (not maximized)</string>
                             </property>
                           </item>
                           <item>
                             <property name="text">
-                              <string>Fill the screen (not maximized)</string>
+                              <string>Maximize</string>
                             </property>
                           </item>
                           <item>
@@ -127,17 +138,22 @@
                         <widget class="QComboBox" name="kcfg_compassNorth">
                           <item>
                             <property name="text">
+                              <string>Own size, centered</string>
+                            </property>
+                          </item>
+                          <item>
+                            <property name="text">
                               <string>Centered window</string>
                             </property>
                           </item>
                           <item>
                             <property name="text">
-                              <string>Maximize</string>
+                              <string>Fill the screen (not maximized)</string>
                             </property>
                           </item>
                           <item>
                             <property name="text">
-                              <string>Fill the screen (not maximized)</string>
+                              <string>Maximize</string>
                             </property>
                           </item>
                           <item>
@@ -168,17 +184,22 @@
                         <widget class="QComboBox" name="kcfg_compassSouth">
                           <item>
                             <property name="text">
+                              <string>Own size, centered</string>
+                            </property>
+                          </item>
+                          <item>
+                            <property name="text">
                               <string>Centered window</string>
                             </property>
                           </item>
                           <item>
                             <property name="text">
-                              <string>Maximize</string>
+                              <string>Fill the screen (not maximized)</string>
                             </property>
                           </item>
                           <item>
                             <property name="text">
-                              <string>Fill the screen (not maximized)</string>
+                              <string>Maximize</string>
                             </property>
                           </item>
                           <item>
@@ -294,7 +315,7 @@
               <item>
                 <widget class="QLabel">
                   <property name="text">
-                    <string>Drag a window and rest the cursor: the compass opens around it. Drop on a slot to place the window. Move away from the compass and drop to leave the window where it is. Esc cancels the move.</string>
+                    <string>Drag a window and rest the cursor: the compass opens around it. Drop on a slot to place the window. Own size puts the window back to the size it opened with. Move away from the compass and drop to leave the window where it is. Esc cancels the move.</string>
                   </property>
                   <property name="wordWrap">
                     <bool>true</bool>
@@ -346,7 +367,7 @@
               <item>
                 <widget class="QLabel">
                   <property name="text">
-                    <string>Layouts come from Plasma: press Meta+T to draw the tiles of each virtual desktop, and drag with Shift to drop a window into them. A compass slot that matches one of those tiles puts the window into the tile.</string>
+                    <string>Layouts come from Plasma: press Meta+T to draw the tiles of each virtual desktop, and drag with Shift to drop a window into them. The compass never puts windows into tiles, so they stay free to resize.</string>
                   </property>
                   <property name="wordWrap">
                     <bool>true</bool>

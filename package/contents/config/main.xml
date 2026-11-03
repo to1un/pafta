@@ -8,7 +8,7 @@
     <group name="">
         <entry name="dwellMs" type="Int">
             <default>250</default>
-            <min>100</min>
+            <min>0</min>
             <max>1000</max>
         </entry>
         <entry name="compassSize" type="Enum">
@@ -21,36 +21,39 @@
         </entry>
         <entry name="compassCenter" type="Enum">
             <choices>
+                <choice name="natural"/>
                 <choice name="centered"/>
-                <choice name="maximize"/>
                 <choice name="fill"/>
+                <choice name="maximize"/>
                 <choice name="top"/>
                 <choice name="bottom"/>
                 <choice name="none"/>
             </choices>
-            <default>centered</default>
+            <default>natural</default>
         </entry>
         <entry name="compassNorth" type="Enum">
             <choices>
+                <choice name="natural"/>
                 <choice name="centered"/>
-                <choice name="maximize"/>
                 <choice name="fill"/>
-                <choice name="top"/>
-                <choice name="bottom"/>
-                <choice name="none"/>
-            </choices>
-            <default>maximize</default>
-        </entry>
-        <entry name="compassSouth" type="Enum">
-            <choices>
-                <choice name="centered"/>
                 <choice name="maximize"/>
-                <choice name="fill"/>
                 <choice name="top"/>
                 <choice name="bottom"/>
                 <choice name="none"/>
             </choices>
             <default>fill</default>
+        </entry>
+        <entry name="compassSouth" type="Enum">
+            <choices>
+                <choice name="natural"/>
+                <choice name="centered"/>
+                <choice name="fill"/>
+                <choice name="maximize"/>
+                <choice name="top"/>
+                <choice name="bottom"/>
+                <choice name="none"/>
+            </choices>
+            <default>centered</default>
         </entry>
         <entry name="compassRings" type="String">
             <default>33, 50, 67</default>

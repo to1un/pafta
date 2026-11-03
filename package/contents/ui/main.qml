@@ -4,7 +4,6 @@ import QtQuick
 import QtCore
 import org.kde.kwin
 import "../code/geometry.js" as G
-import "../code/tiling.js" as T
 
 Item {
     id: root
@@ -12,9 +11,9 @@ Item {
     readonly property var defaults: ({
         dwellMs: 250,
         compassSize: "medium",
-        compassCenter: "centered",
-        compassNorth: "maximize",
-        compassSouth: "fill",
+        compassCenter: "natural",
+        compassNorth: "fill",
+        compassSouth: "centered",
         compassRings: "33, 50, 67",
         compassCorners: "quarters",
         centeredWidth: 70,
@@ -48,6 +47,11 @@ Item {
         return String(w.internalId);
     }
 
+    function tileFrac(tile) {
+        const g = tile.relativeGeometry;
+        return { x: g.x, y: g.y, w: g.width, h: g.height };
+    }
+
     // ---- config -----------------------------------------------------------
 
     // Read from kwinrc on every drag: KWin.readConfig only sees a saved dialog after a KWin
@@ -66,7 +70,8 @@ Item {
         };
         const flag = k => c[k] === true || c[k] === "true";
         const percent = k => Math.min(100, Math.max(10, Number(c[k]) || defaults[k]));
-        c.dwellMs = Math.max(100, Number(c.dwellMs) || defaults.dwellMs);
+        const dwell = Number(c.dwellMs); // 0: open as soon as the drag starts
+        c.dwellMs = !isFinite(dwell) || dwell < 0 ? defaults.dwellMs : dwell === 0 ? 0 : Math.max(100, dwell);
         c.compassSize = choice("compassSize", ["small", "medium", "large"]);
         c.compassCorners = choice("compassCorners", ["off", "quarters", "rings"]);
         c.remember = flag("remember");
@@ -101,14 +106,9 @@ Item {
         records[idOf(w)] = rec;
     }
 
-    // Into the desktop's own tile when one covers `frac` (drawn with Meta+T), else a plain geometry.
+    // A plain geometry, never a tile: a window in a tile resizes with the tile, not on its own.
     function placeFrac(w, output, desktop, frac) {
         const r = Workspace.rootTile(output, desktop);
-        const tile = r ? T.tileMatching(r, frac) : null;
-        if (tile && tile.manage(w)) {
-            remember(w, { frac: T.fracOf(tile) });
-            return;
-        }
         if (w.tile)
             w.tile.unmanage(w);
         w.setMaximize(false, false);
@@ -118,10 +118,28 @@ Item {
         remember(w, { frac: frac });
     }
 
+    // The size the window opened with, or was last resized to by hand while free.
+    function naturalSize(w) {
+        const hook = hooks[idOf(w)];
+        return hook && hook.natural ? hook.natural : { width: w.frameGeometry.width, height: w.frameGeometry.height };
+    }
+
+    function placeNatural(w, output, desktop) {
+        if (w.tile)
+            w.tile.unmanage(w);
+        w.setMaximize(false, false);
+        setRestore(w, null);
+        const g = G.toAbs(G.naturalFrac(naturalSize(w), areaOf(output, desktop)), areaOf(output, desktop));
+        w.frameGeometry = Qt.rect(Math.round(g.x), Math.round(g.y), Math.round(g.width), Math.round(g.height));
+        delete records[idOf(w)]; // it opens at its own size anyway
+    }
+
     // `start`: where a dropped window was when the drag began, to un-maximize it to.
     function placeKey(w, output, desktop, key, start) {
         const p = G.compassPlacement(key, cfg.compass);
-        if (p.max) {
+        if (p.natural) {
+            placeNatural(w, output, desktop);
+        } else if (p.max) {
             if (w.tile)
                 w.tile.unmanage(w);
             w.setMaximize(true, true);
@@ -136,18 +154,22 @@ Item {
     // ---- drag -----------------------------------------------------------------
 
     function moveResizeStarted(w) {
+        const hook = hooks[idOf(w)];
+        if (hook)
+            hook.resizing = w.resize;
         if (!w.move || !manageable(w))
             return;
         loadConfig();
         const p = Workspace.cursorPos;
         drag = {
             window: w, startMax: w.maximizeMode, start: where(w),
-            open: false, hot: "", sig: "",
+            open: false, done: false, hot: "", sig: "",
             anchor: { x: p.x, y: p.y }, anchorTime: Date.now(), center: null,
             output: null, desktop: null, area: null, outGeo: null
         };
         overlay.vs = rect(Workspace.virtualScreenGeometry);
         overlay.compass = cfg.compass;
+        poll();
         pollTimer.start();
         log("move start: " + w.resourceClass);
     }
@@ -167,10 +189,12 @@ Item {
             d.outGeo = rect(output.geometry);
         }
 
-        if (G.dist(p, d.anchor) > 4) {
+        const moved = G.dist(p, d.anchor) > 4, immediate = cfg.dwellMs === 0;
+        if (moved) {
             d.anchor = p;
             d.anchorTime = now;
-        } else if (!d.open && now - d.anchorTime >= cfg.dwellMs) {
+        }
+        if (!d.open && !d.done && (immediate || (!moved && now - d.anchorTime >= cfg.dwellMs))) {
             const m = cfg.compass.geo.RB + 30, o = d.outGeo; // room for the compass label below
             d.center = {
                 x: Math.min(Math.max(p.x, o.x + m), o.x + o.width - m),
@@ -181,6 +205,7 @@ Item {
         // Moving well away closes it; drop anywhere then and the window stays where it is.
         if (d.open && G.dist(p, d.center) > 2.5 * cfg.compass.geo.RB) {
             d.open = false;
+            d.done = immediate; // opened without a pause: once per drag, so the window can be dropped freely
             d.anchor = p;
             d.anchorTime = now;
         }
@@ -196,7 +221,8 @@ Item {
         d.sig = sig;
         overlay.center = d.center || { x: 0, y: 0 };
         overlay.hot = d.hot;
-        overlay.preview = d.hot ? G.toAbs(G.compassPlacement(d.hot, cfg.compass).frac, d.area) : null;
+        const p = d.hot ? G.compassPlacement(d.hot, cfg.compass) : null;
+        overlay.preview = !p ? null : G.toAbs(p.natural ? G.naturalFrac(naturalSize(d.window), d.area) : p.frac, d.area);
         overlay.visible = d.open;
     }
 
@@ -207,6 +233,13 @@ Item {
     }
 
     function moveResizeFinished(w) {
+        const hook = hooks[idOf(w)];
+        if (hook && hook.resizing) {
+            hook.resizing = false;
+            // Resized by hand while free (not placed by pafta): that is its own size now.
+            if (!w.tile && w.maximizeMode === 0 && !records[idOf(w)])
+                hook.natural = { width: w.frameGeometry.width, height: w.frameGeometry.height };
+        }
         if (!drag || drag.window !== w)
             return;
         poll();
@@ -215,7 +248,7 @@ Item {
         // Shift-drag / electric borders are applied before this signal (kwin src/window.cpp:1086-1100).
         if (w.tile) {
             log("KWin tiled the window natively; keeping it");
-            remember(w, { frac: T.fracOf(w.tile) });
+            remember(w, { frac: tileFrac(w.tile) });
             return;
         }
         if (w.maximizeMode !== 0 && d.startMax === 0) {
@@ -238,7 +271,7 @@ Item {
     function tileChanged(w, tile) {
         // `tile` notifies asynchronously on Wayland; only positive assignments are recorded.
         if (tile && manageable(w))
-            remember(w, { frac: T.fracOf(tile) });
+            remember(w, { frac: tileFrac(tile) });
     }
 
     // ---- maximize -------------------------------------------------------------
@@ -298,7 +331,10 @@ Item {
     function addWindow(w) {
         if (!w || !w.normalWindow || hooks[idOf(w)])
             return;
-        hooks[idOf(w)] = hookComponent.createObject(root, { window: w, handler: root });
+        // Before a remembered placement is restored (deferred), so this is the size it opened with.
+        hooks[idOf(w)] = hookComponent.createObject(root, {
+            window: w, handler: root, natural: { width: w.frameGeometry.width, height: w.frameGeometry.height }
+        });
     }
 
     function windowClosed(w) {

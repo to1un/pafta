@@ -88,7 +88,7 @@ test('compassHit: hub', () => {
     assert.equal(G.compassHit(center, center, 3, slots, C), 'c');
     assert.equal(G.compassHit(center, at(10, C.R0 - 4), 3, slots, C), 'c');
     assert.equal(G.compassHit(center, at(10, C.R0 - 2), 3, slots, C), '', 'dead band at the hub edge');
-    assert.equal(G.compassHit(center, center, 3, { c: 'none', n: 'maximize', s: 'fill' }, C), '', 'hub disabled');
+    assert.equal(G.compassHit(center, center, 3, { c: 'none', n: 'fill', s: 'centered' }, C), '', 'hub disabled');
 });
 
 test('compassHit: none slots disable n/s', () => {
@@ -162,6 +162,8 @@ test('compassPlacement: hub/n/s slot types', () => {
         bottom: [false, { x: 0, y: 0.5, w: 1, h: 0.5 }],
         centered: [false, { x: 0.15, y: 0.125, w: 0.7, h: 0.75 }]
     };
+    for (const k of ['c', 'n', 's'])
+        assert.deepEqual(G.compassPlacement(k, o('natural')), { max: false, natural: true, frac: null }, k);
     for (const k of ['c', 'n', 's']) {
         for (const [type, [max, frac]] of Object.entries(want)) {
             const p = G.compassPlacement(k, o(type));
@@ -229,9 +231,18 @@ test('toAbs / toFrac round trip', () => {
     approxRect(G.toFrac(r, area), f);
 });
 
-test('sameFrac / sameRect tolerances', () => {
-    assert.ok(G.sameFrac({ x: 0, y: 0, w: 0.5, h: 1 }, { x: 0.005, y: 0, w: 0.5, h: 1 }));
-    assert.ok(!G.sameFrac({ x: 0, y: 0, w: 0.5, h: 1 }, { x: 0.2, y: 0, w: 0.5, h: 1 }));
+test('defaults: own size at the hub, fill north, centered south', () => {
+    assert.deepEqual(G.DEFAULT_SLOTS, { c: 'natural', n: 'fill', s: 'centered' });
+});
+
+test('naturalFrac: centered, capped at the whole area', () => {
+    const area = { x: 0, y: 0, width: 1000, height: 800 };
+    approxRect(G.naturalFrac({ width: 500, height: 400 }, area), { x: 0.25, y: 0.25, w: 0.5, h: 0.5 });
+    approxRect(G.naturalFrac({ width: 1500, height: 200 }, area), { x: 0, y: 0.375, w: 1, h: 0.25 });
+    assert.ok(G.validFrac(G.naturalFrac({ width: 4000, height: 4000 }, area)));
+});
+
+test('sameRect tolerance', () => {
     const r = { x: 10, y: 20, width: 300, height: 200 };
     assert.ok(G.sameRect(r, { x: 11, y: 19, width: 300, height: 201 }));
     assert.ok(!G.sameRect(r, { x: 13, y: 20, width: 300, height: 200 }));

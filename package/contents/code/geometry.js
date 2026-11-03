@@ -12,8 +12,8 @@ var COMPASS_SIZES = { small: 210, medium: 260, large: 320 };
 var COMPASS_SECTORS = [["e", 0], ["s", 90], ["w", 180], ["n", 270]];
 var COMPASS_SECTORS_CORNERS = [["e", 0], ["se", 45], ["s", 90], ["sw", 135], ["w", 180], ["nw", 225], ["n", 270], ["ne", 315]];
 // Choices of compassCenter / compassNorth / compassSouth, in main.xml order.
-var SLOT_TYPES = ["centered", "maximize", "fill", "top", "bottom", "none"];
-var DEFAULT_SLOTS = { c: "centered", n: "maximize", s: "fill" };
+var SLOT_TYPES = ["natural", "centered", "fill", "maximize", "top", "bottom", "none"];
+var DEFAULT_SLOTS = { c: "natural", n: "fill", s: "centered" };
 var DEFAULT_RINGS = [33, 50, 67];
 var FRACTIONS = { 25: ["¼", 1 / 4], 33: ["⅓", 1 / 3], 50: ["½", 1 / 2], 67: ["⅔", 2 / 3], 75: ["¾", 3 / 4] };
 
@@ -32,10 +32,6 @@ function toAbs(f, area) {
 
 function toFrac(r, area) {
     return { x: (r.x - area.x) / area.width, y: (r.y - area.y) / area.height, w: r.width / area.width, h: r.height / area.height };
-}
-
-function sameFrac(a, b, eps) {
-    return near(a.x, b.x, eps) && near(a.y, b.y, eps) && near(a.w, b.w, eps) && near(a.h, b.h, eps);
 }
 
 function sameRect(a, b, eps) {
@@ -97,7 +93,8 @@ function parseRings(text) {
     return { rings: out.sort(function (a, b) { return a - b; }), error: "" };
 }
 
-// { max, frac } for a compass key; opts: { rings, slots, cw, ch } (percentages).
+// { max, natural, frac } for a compass key; opts: { rings, slots, cw, ch } (percentages).
+// "natural" has no fraction: the window's own size, centered (see naturalFrac).
 // Diagonals are corner quarters, half the height: half the width, or the ring's width.
 function compassPlacement(key, opts) {
     var side = key.replace(/\d+$/, "");
@@ -108,6 +105,8 @@ function compassPlacement(key, opts) {
         return { max: false, frac: { x: x, y: 0, w: w, h: 1 } };
     }
     switch (opts.slots[key]) {
+    case "natural":
+        return { max: false, natural: true, frac: null };
     case "maximize":
         return { max: true, frac: { x: 0, y: 0, w: 1, h: 1 } };
     case "fill":
@@ -119,6 +118,12 @@ function compassPlacement(key, opts) {
     }
     var cw = opts.cw / 100, ch = opts.ch / 100;
     return { max: false, frac: { x: (1 - cw) / 2, y: (1 - ch) / 2, w: cw, h: ch } };
+}
+
+// A window of `size` ({width, height}) centered in `area`, as a fraction; at most the whole area.
+function naturalFrac(size, area) {
+    var w = Math.min(1, size.width / area.width), h = Math.min(1, size.height / area.height);
+    return { x: (1 - w) / 2, y: (1 - h) / 2, w: w, h: h };
 }
 
 // SVG path helpers for the compass (angles in radians, y down).

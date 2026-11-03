@@ -30,7 +30,7 @@ Item {
         s: i18ndc("pafta", "compass south", "S"), w: i18ndc("pafta", "compass west", "W")
     })
     readonly property var names: ({
-        centered: i18nd("pafta", "Centered"), maximize: i18nd("pafta", "Maximize"), fill: i18nd("pafta", "Fill"),
+        natural: i18nd("pafta", "Own size"), centered: i18nd("pafta", "Centered"), maximize: i18nd("pafta", "Maximize"), fill: i18nd("pafta", "Fill"),
         top: i18nd("pafta", "Top half"), bottom: i18nd("pafta", "Bottom half")
     })
 
