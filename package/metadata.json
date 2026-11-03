@@ -7,7 +7,7 @@
             }
         ],
         "Category": "Window Management",
-        "Description": "Compass picker for placing windows while dragging, on Plasma's native tiles",
+        "Description": "Compass picker for placing windows while you drag them",
         "EnabledByDefault": false,
         "Icon": "view-split-left-right",
         "Id": "pafta",
