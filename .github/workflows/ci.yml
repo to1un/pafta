@@ -1,0 +1,42 @@
+# SPDX-FileCopyrightText: 2026 to1un
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+# Arch ships the newest released KWin first, so the weekly run catches Plasma regressions early.
+name: ci
+
+on:
+  push:
+  pull_request:
+  schedule:
+    - cron: "23 5 * * 1"   # Mondays 05:23 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    container: archlinux:latest
+    timeout-minutes: 15
+    steps:
+      - name: Install dependencies
+        # --disable-sandbox: pacman's Landlock download sandbox fails inside Docker.
+        run: pacman -Syu --noconfirm --needed --disable-sandbox kwin qt6-base qt6-declarative qt6-tools nodejs jq dbus git diffutils
+
+      - name: Drop kwin_wayland file capabilities
+        # It ships with cap_sys_nice, which the container lacks, so exec fails with EPERM.
+        run: setcap -r /usr/bin/kwin_wayland
+
+      - uses: actions/checkout@v5
+
+      - name: Versions
+        run: pacman -Q kwin qt6-declarative nodejs
+
+      - name: Geometry unit tests
+        run: node --test tests/geometry.test.js
+
+      - name: Headless KWin smoke test
+        env:
+          LOAD_TIMEOUT: "120"
+        run: bash tests/smoke.sh
