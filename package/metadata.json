@@ -1,0 +1,23 @@
+{
+    "KPackageStructure": "KWin/Script",
+    "KPlugin": {
+        "Authors": [
+            {
+                "Name": "to1un"
+            }
+        ],
+        "Category": "Window Management",
+        "Description": "Compass picker for placing windows while dragging, on Plasma's native tiles",
+        "EnabledByDefault": false,
+        "Icon": "view-split-left-right",
+        "Id": "pafta",
+        "License": "GPL-3.0-or-later",
+        "Name": "pafta",
+        "Version": "0.1.0"
+    },
+    "X-KDE-ConfigModule": "kwin/effects/configs/kcm_kwin4_genericscripted",
+    "X-KWin-Config-TranslationDomain": "pafta",
+    "X-Plasma-API": "declarativescript",
+    "X-Plasma-API-Minimum-Version": "6.0",
+    "X-Plasma-MainScript": "ui/main.qml"
+}

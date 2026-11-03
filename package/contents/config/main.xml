@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- SPDX-FileCopyrightText: 2026 to1un -->
+<!-- SPDX-License-Identifier: GPL-3.0-or-later -->
+<kcfg xmlns="http://www.kde.org/standards/kcfg/1.0"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:schemaLocation="http://www.kde.org/standards/kcfg/1.0 http://www.kde.org/standards/kcfg/1.0/kcfg.xsd">
+    <kcfgfile name=""/>
+    <group name="">
+        <entry name="dwellMs" type="Int">
+            <default>250</default>
+            <min>100</min>
+            <max>1000</max>
+        </entry>
+        <entry name="compassSize" type="Enum">
+            <choices>
+                <choice name="small"/>
+                <choice name="medium"/>
+                <choice name="large"/>
+            </choices>
+            <default>medium</default>
+        </entry>
+        <entry name="compassCenter" type="Enum">
+            <choices>
+                <choice name="centered"/>
+                <choice name="maximize"/>
+                <choice name="fill"/>
+                <choice name="top"/>
+                <choice name="bottom"/>
+                <choice name="none"/>
+            </choices>
+            <default>centered</default>
+        </entry>
+        <entry name="compassNorth" type="Enum">
+            <choices>
+                <choice name="centered"/>
+                <choice name="maximize"/>
+                <choice name="fill"/>
+                <choice name="top"/>
+                <choice name="bottom"/>
+                <choice name="none"/>
+            </choices>
+            <default>maximize</default>
+        </entry>
+        <entry name="compassSouth" type="Enum">
+            <choices>
+                <choice name="centered"/>
+                <choice name="maximize"/>
+                <choice name="fill"/>
+                <choice name="top"/>
+                <choice name="bottom"/>
+                <choice name="none"/>
+            </choices>
+            <default>fill</default>
+        </entry>
+        <entry name="compassRings" type="String">
+            <default>33, 50, 67</default>
+        </entry>
+        <entry name="compassCorners" type="Enum">
+            <choices>
+                <choice name="off"/>
+                <choice name="quarters"/>
+                <choice name="rings"/>
+            </choices>
+            <default>quarters</default>
+        </entry>
+        <entry name="centeredWidth" type="Int">
+            <default>70</default>
+            <min>10</min>
+            <max>100</max>
+        </entry>
+        <entry name="centeredHeight" type="Int">
+            <default>75</default>
+            <min>10</min>
+            <max>100</max>
+        </entry>
+        <entry name="remember" type="Bool">
+            <default>true</default>
+        </entry>
+        <entry name="restoreMaximized" type="Bool">
+            <default>true</default>
+        </entry>
+        <entry name="exceptions" type="String">
+            <default>org.kde.kcalc
+plasmashell
+krunner
+org.kde.spectacle</default>
+        </entry>
+        <entry name="debug" type="Bool">
+            <default>false</default>
+        </entry>
+    </group>
+</kcfg>
