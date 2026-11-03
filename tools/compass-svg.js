@@ -3,7 +3,8 @@
 //
 // Prints the compass as a static SVG, drawn like package/contents/ui/Compass.qml from the same
 // geometry.js, for the config dialog. Fixed colors: a mid gray reads on light and dark themes.
-//   node tools/compass-svg.js [size] [corners]     # defaults: large quarters
+//   node tools/compass-svg.js [size] [corners] [hot key] [label]   # defaults: large quarters, nothing hovered
+// The hot key (a G.compassHit key such as e1) is drawn hovered, with its label below, as while dragging.
 'use strict';
 const fs = require('node:fs');
 const path = require('node:path');
@@ -16,6 +17,7 @@ const G = new Function(src + '\nreturn {' + names.join(',') + '};')();
 const geo = G.compassGeometry(process.argv[2] || 'large', process.argv[3] || 'quarters');
 const rings = G.DEFAULT_RINGS;
 const FG = '#8a8f94', ACCENT = '#3daee9';
+const hot = process.argv[4] || '', hotLabel = process.argv[5] || '';
 const half = geo.RB + 4, span = 180 / geo.sectors.length, band = (geo.R3 - geo.R0) / rings.length;
 
 const path_ = (d, attrs) => `<path d="${d}" ${attrs}/>`;
@@ -68,8 +70,26 @@ const widths = rings.map((p, j) => {
         + `fill="${FG}" font-size="10">${G.ringSymbol(p)}</text>`).join('');
 }).join('');
 
-const size = 2 * half;
-process.stdout.write(`<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="${-half} ${-half} ${size} ${size}" `
+// Outline of the hovered sector, as Compass.qml hotPath.
+function hotPath() {
+    const side = hot === 'c' ? '' : hot.replace(/\d+$/, ''), sector = geo.sectors.find(s => s[0] === side);
+    if (!sector)
+        return '';
+    const a0 = G.rad(sector[1] - span + 1.2), a1 = G.rad(sector[1] + span - 1.2), ring = Number(hot.slice(side.length));
+    return hot === side ? G.arcPath(a0, a1, geo.R0 + 1.5, geo.R3 - 1.5)
+        : G.arcPath(a0, a1, geo.R0 + ring * band + 1.5, geo.R0 + (ring + 1) * band - 1.5);
+}
+
+function pill() {
+    if (!hotLabel)
+        return '';
+    const w = hotLabel.length * 7 + 18, y = half + 4;
+    return `<rect x="${-w / 2}" y="${y}" width="${w}" height="22" rx="11" fill="${FG}" fill-opacity="0.12" stroke="${fg(0.35)}"/>`
+        + `<text y="${y + 15}" fill="${FG}" font-size="12">${hotLabel}</text>`;
+}
+
+const size = 2 * half, height = size + (hotLabel ? 30 : 0);
+process.stdout.write(`<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${height}" viewBox="${-half} ${-half} ${size} ${height}" `
     + `font-family="sans-serif" text-anchor="middle">`
     + `<circle r="${geo.RB}" fill="${FG}" fill-opacity="0.06" stroke="${fg(0.35)}"/>`
     + `<circle r="${geo.R3}" fill="${FG}" fill-opacity="0.05" stroke="${fg(0.4)}"/>`
@@ -80,6 +100,7 @@ process.stdout.write(`<svg xmlns="http://www.w3.org/2000/svg" width="${size}" he
     + arms([45, 135, 225, 315], geo.R3 * 0.45, 4, FG, 0.3, 0.12)
     + arms([0, 90, 180], geo.R3 - 10, 8, FG, 0.38, 0.16)
     + arms([270], geo.R3 - 10, 8, ACCENT, 0.6, 0.28)
+    + (hot ? path_(hotPath(), `fill="${ACCENT}" fill-opacity="0.18" stroke="${ACCENT}" stroke-width="2"`) : '')
     + `<circle r="${geo.R0 - 3}" fill="${FG}" fill-opacity="0.15" stroke="${fg(0.6)}"/>`
-    + letters + widths
+    + letters + widths + pill()
     + '</svg>\n');

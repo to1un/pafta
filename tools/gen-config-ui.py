@@ -7,12 +7,14 @@ import base64, html, os, subprocess, xml.dom.minidom
 
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
 
-# The compass as drawn while dragging, from the same geometry (tools/compass-svg.js).
-SVG = subprocess.run(["node", os.path.join(ROOT, "tools", "compass-svg.js"), "large", "quarters"],
-                     check=True, capture_output=True, text=True).stdout
+# The compass as drawn while dragging, from the same geometry (tools/compass-svg.js), with the
+# ½ ring on the east hovered. One per compassCorners choice, in main.xml order.
+CORNERS = ["off", "quarters", "rings"]
 
-def img():
-    b = base64.b64encode(SVG.encode()).decode()
+def img(corners):
+    svg = subprocess.run(["node", os.path.join(ROOT, "tools", "compass-svg.js"), "large", corners, "e1", "½ right"],
+                         check=True, capture_output=True, text=True).stdout
+    b = base64.b64encode(svg.encode()).decode()
     return html.escape('<img src="data:image/svg+xml;base64,%s">' % b)
 
 def esc(s):
@@ -96,11 +98,16 @@ def stretch(name, orientation):
 compass_body = (stretch("compassTop", "Vertical")
                 + '<item><layout class="QHBoxLayout" name="compassRow">'
                 + stretch("compassLeft", "Horizontal")
-                + ('<item><widget class="QLabel" name="compassPreview"><property name="text"><string>%s</string></property>'
-                   '<property name="alignment"><set>Qt::AlignVCenter|Qt::AlignHCenter</set></property></widget></item>') % img()
+                # The Diagonals choice flips the page (see `connections` below).
+                + '<item><widget class="QStackedWidget" name="compassPreview">'
+                + "".join(('<widget class="QLabel" name="compassPreview_%s"><property name="text"><string>%s</string></property>'
+                           '<property name="alignment"><set>Qt::AlignVCenter|Qt::AlignHCenter</set></property></widget>') % (c, img(c))
+                          for c in CORNERS)
+                + '</widget></item>'
                 + '<item><spacer name="compassGap"><property name="orientation"><enum>Qt::Horizontal</enum></property>'
                   '<property name="sizeType"><enum>QSizePolicy::Fixed</enum></property><property name="sizeHint"><size><width>24</width><height>0</height></size></property></spacer></item>'
-                + '<item><layout class="QVBoxLayout" name="compassSide"><item>%s</item><item>%s</item></layout></item>' % (compass_form, help_text)
+                + '<item><layout class="QVBoxLayout" name="compassSide">' + stretch("sideTop", "Vertical")
+                + '<item>%s</item><item>%s</item>' % (compass_form, help_text) + stretch("sideBottom", "Vertical") + '</layout></item>'
                 + stretch("compassRight", "Horizontal")
                 + '</layout></item>')
 
@@ -123,7 +130,10 @@ ui = ('<?xml version="1.0" encoding="UTF-8"?>\n'
       '<widget class="QWidget" name="KWin::PaftaConfigForm"><layout class="QVBoxLayout" name="mainLayout">'
       '<item><widget class="QTabWidget" name="tabs">%s%s%s</widget></item>'
       '<item>%s</item>'
-      '</layout></widget><resources/><connections/></ui>\n') % (
+      '</layout></widget><resources/><connections>'
+      '<connection><sender>kcfg_compassCorners</sender><signal>currentIndexChanged(int)</signal>'
+      '<receiver>compassPreview</receiver><slot>setCurrentIndex(int)</slot></connection>'
+      '</connections></ui>\n') % (
     tab("compassTab", "Compass", compass_body),
     tab("behaviorTab", "Behavior", behavior_body),
     tab("exceptionsTab", "Exceptions", exceptions_body),
