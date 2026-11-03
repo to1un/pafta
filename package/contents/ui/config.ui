@@ -17,7 +17,7 @@
                   <item>
                     <widget class="QLabel" name="compassPreview">
                       <property name="text">
-                        <string>&lt;img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMjAiIGhlaWdodD0iMjIwIiB2aWV3Qm94PSItMTEwIC0xMTAgMjIwIDIyMCIgZm9udC1mYW1pbHk9InNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMTEiIHRleHQtYW5jaG9yPSJtaWRkbGUiPgo8Y2lyY2xlIHI9IjEwNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjODg4IiBzdHJva2Utd2lkdGg9IjEuNSIvPgo8Y2lyY2xlIHI9Ijg2IiBmaWxsPSIjM2I4MmY2IiBmaWxsLW9wYWNpdHk9Ii4wNiIgc3Ryb2tlPSIjODg4IiBzdHJva2Utb3BhY2l0eT0iLjYiLz4KPGcgc3Ryb2tlPSIjODg4IiBzdHJva2Utb3BhY2l0eT0iLjUiPgo8bGluZSB4MT0iMTUuMyIgeTE9Ii02LjMiIHgyPSI3OS41IiB5Mj0iLTMyLjkiLz48bGluZSB4MT0iNi4zIiB5MT0iLTE1LjMiIHgyPSIzMi45IiB5Mj0iLTc5LjUiLz4KPGxpbmUgeDE9Ii02LjMiIHkxPSItMTUuMyIgeDI9Ii0zMi45IiB5Mj0iLTc5LjUiLz48bGluZSB4MT0iLTE1LjMiIHkxPSItNi4zIiB4Mj0iLTc5LjUiIHkyPSItMzIuOSIvPgo8bGluZSB4MT0iLTE1LjMiIHkxPSI2LjMiIHgyPSItNzkuNSIgeTI9IjMyLjkiLz48bGluZSB4MT0iLTYuMyIgeTE9IjE1LjMiIHgyPSItMzIuOSIgeTI9Ijc5LjUiLz4KPGxpbmUgeDE9IjYuMyIgeTE9IjE1LjMiIHgyPSIzMi45IiB5Mj0iNzkuNSIvPjxsaW5lIHgxPSIxNS4zIiB5MT0iNi4zIiB4Mj0iNzkuNSIgeTI9IjMyLjkiLz4KPC9nPgo8ZyBmaWxsPSJub25lIiBzdHJva2U9IiM4ODgiIHN0cm9rZS1kYXNoYXJyYXk9IjIgMyI+CjxwYXRoIGQ9Ik0gMzMuOSAtMTQuMCBBIDM2LjcgMzYuNyAwIDAgMSAzMy45IDE0LjAiLz48cGF0aCBkPSJNIDU2LjEgLTIzLjIgQSA2MC43IDYwLjcgMCAwIDEgNTYuMSAyMy4yIi8+CjxwYXRoIGQ9Ik0gLTMzLjkgLTE0LjAgQSAzNi43IDM2LjcgMCAwIDAgLTMzLjkgMTQuMCIvPjxwYXRoIGQ9Ik0gLTU2LjEgLTIzLjIgQSA2MC43IDYwLjcgMCAwIDAgLTU2LjEgMjMuMiIvPgo8L2c+CjxjaXJjbGUgcj0iMTYiIGZpbGw9IiMzYjgyZjYiIGZpbGwtb3BhY2l0eT0iLjM1IiBzdHJva2U9IiMzYjgyZjYiLz4KPGcgZmlsbD0iIzg4OCI+Cjx0ZXh0IHk9IjQiPmh1YjwvdGV4dD4KPHRleHQgeT0iLTUyIj5OPC90ZXh0Pjx0ZXh0IHk9IjU4Ij5TPC90ZXh0Pgo8dGV4dCB4PSItNTIiIHk9Ii02MCI+4oaWPC90ZXh0Pjx0ZXh0IHg9IjUyIiB5PSItNjAiPuKGlzwvdGV4dD48dGV4dCB4PSItNTIiIHk9IjY4Ij7ihpk8L3RleHQ+PHRleHQgeD0iNTIiIHk9IjY4Ij7ihpg8L3RleHQ+Cjx0ZXh0IHg9Ii0yNyIgeT0iNCIgZm9udC1zaXplPSI5Ij7ihZM8L3RleHQ+PHRleHQgeD0iLTQ4IiB5PSI0IiBmb250LXNpemU9IjkiPsK9PC90ZXh0Pjx0ZXh0IHg9Ii03MiIgeT0iNCIgZm9udC1zaXplPSI5Ij7ihZQ8L3RleHQ+Cjx0ZXh0IHg9IjI3IiB5PSI0IiBmb250LXNpemU9IjkiPuKFkzwvdGV4dD48dGV4dCB4PSI0OCIgeT0iNCIgZm9udC1zaXplPSI5Ij7CvTwvdGV4dD48dGV4dCB4PSI3MiIgeT0iNCIgZm9udC1zaXplPSI5Ij7ihZQ8L3RleHQ+Cjx0ZXh0IHg9Ii05NiIgeT0iNCIgZm9udC13ZWlnaHQ9ImJvbGQiPlc8L3RleHQ+PHRleHQgeD0iOTYiIHk9IjQiIGZvbnQtd2VpZ2h0PSJib2xkIj5FPC90ZXh0Pgo8L2c+Cjwvc3ZnPg==" width="220" height="220"&gt;</string>
+                        <string>&lt;img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMjgiIGhlaWdodD0iMzI4IiB2aWV3Qm94PSItMTY0IC0xNjQgMzI4IDMyOCIgZm9udC1mYW1pbHk9InNhbnMtc2VyaWYiIHRleHQtYW5jaG9yPSJtaWRkbGUiPjxjaXJjbGUgcj0iMTYwIiBmaWxsPSIjOGE4Zjk0IiBmaWxsLW9wYWNpdHk9IjAuMDYiIHN0cm9rZT0iIzhhOGY5NCIgc3Ryb2tlLW9wYWNpdHk9IjAuMzUiLz48Y2lyY2xlIHI9IjE0MCIgZmlsbD0iIzhhOGY5NCIgZmlsbC1vcGFjaXR5PSIwLjA1IiBzdHJva2U9IiM4YThmOTQiIHN0cm9rZS1vcGFjaXR5PSIwLjQiLz48cGF0aCBkPSJNMTM1LjIzIDM2LjIzTDE0MS4wMyAzNy43OU0xMzEuNTYgNDcuODhMMTM0LjM4IDQ4LjkxTTEyNi44OCA1OS4xN0wxMjkuNjAgNjAuNDNNMTIxLjI0IDcwLjAwTDEyNi40NCA3My4wME0xMTQuNjggODAuMzBMMTE3LjE0IDgyLjAyTTEwNy4yNSA4OS45OUwxMDkuNTQgOTEuOTJNODkuOTkgMTA3LjI1TDkxLjkyIDEwOS41NE04MC4zMCAxMTQuNjhMODIuMDIgMTE3LjE0TTcwLjAwIDEyMS4yNEw3My4wMCAxMjYuNDRNNTkuMTcgMTI2Ljg4TDYwLjQzIDEyOS42ME00Ny44OCAxMzEuNTZMNDguOTEgMTM0LjM4TTM2LjIzIDEzNS4yM0wzNy43OSAxNDEuMDNNLTM2LjIzIDEzNS4yM0wtMzcuNzkgMTQxLjAzTS00Ny44OCAxMzEuNTZMLTQ4LjkxIDEzNC4zOE0tNTkuMTcgMTI2Ljg4TC02MC40MyAxMjkuNjBNLTcwLjAwIDEyMS4yNEwtNzMuMDAgMTI2LjQ0TS04MC4zMCAxMTQuNjhMLTgyLjAyIDExNy4xNE0tODkuOTkgMTA3LjI1TC05MS45MiAxMDkuNTRNLTEwNy4yNSA4OS45OUwtMTA5LjU0IDkxLjkyTS0xMTQuNjggODAuMzBMLTExNy4xNCA4Mi4wMk0tMTIxLjI0IDcwLjAwTC0xMjYuNDQgNzMuMDBNLTEyNi44OCA1OS4xN0wtMTI5LjYwIDYwLjQzTS0xMzEuNTYgNDcuODhMLTEzNC4zOCA0OC45MU0tMTM1LjIzIDM2LjIzTC0xNDEuMDMgMzcuNzlNLTEzNS4yMyAtMzYuMjNMLTE0MS4wMyAtMzcuNzlNLTEzMS41NiAtNDcuODhMLTEzNC4zOCAtNDguOTFNLTEyNi44OCAtNTkuMTdMLTEyOS42MCAtNjAuNDNNLTEyMS4yNCAtNzAuMDBMLTEyNi40NCAtNzMuMDBNLTExNC42OCAtODAuMzBMLTExNy4xNCAtODIuMDJNLTEwNy4yNSAtODkuOTlMLTEwOS41NCAtOTEuOTJNLTg5Ljk5IC0xMDcuMjVMLTkxLjkyIC0xMDkuNTRNLTgwLjMwIC0xMTQuNjhMLTgyLjAyIC0xMTcuMTRNLTcwLjAwIC0xMjEuMjRMLTczLjAwIC0xMjYuNDRNLTU5LjE3IC0xMjYuODhMLTYwLjQzIC0xMjkuNjBNLTQ3Ljg4IC0xMzEuNTZMLTQ4LjkxIC0xMzQuMzhNLTM2LjIzIC0xMzUuMjNMLTM3Ljc5IC0xNDEuMDNNMzYuMjMgLTEzNS4yM0wzNy43OSAtMTQxLjAzTTQ3Ljg4IC0xMzEuNTZMNDguOTEgLTEzNC4zOE01OS4xNyAtMTI2Ljg4TDYwLjQzIC0xMjkuNjBNNzAuMDAgLTEyMS4yNEw3My4wMCAtMTI2LjQ0TTgwLjMwIC0xMTQuNjhMODIuMDIgLTExNy4xNE04OS45OSAtMTA3LjI1TDkxLjkyIC0xMDkuNTRNMTA3LjI1IC04OS45OUwxMDkuNTQgLTkxLjkyTTExNC42OCAtODAuMzBMMTE3LjE0IC04Mi4wMk0xMjEuMjQgLTcwLjAwTDEyNi40NCAtNzMuMDBNMTI2Ljg4IC01OS4xN0wxMjkuNjAgLTYwLjQzTTEzMS41NiAtNDcuODhMMTM0LjM4IC00OC45MU0xMzUuMjMgLTM2LjIzTDE0MS4wMyAtMzcuNzkiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzhhOGY5NCIgc3Ryb2tlLW9wYWNpdHk9IjAuNCIvPjxwYXRoIGQ9Ik05OC45OSA5OC45OUwxMDUuMzYgMTA1LjM2TS05OC45OSA5OC45OUwtMTA1LjM2IDEwNS4zNk0tOTguOTkgLTk4Ljk5TC0xMDUuMzYgLTEwNS4zNk05OC45OSAtOTguOTlMMTA1LjM2IC0xMDUuMzYiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzhhOGY5NCIgc3Ryb2tlLW9wYWNpdHk9IjAuNyIvPjxwYXRoIGQ9Ik0yNC4wMiA5Ljk1TDEyOS4zNCA1My41OE05Ljk1IDI0LjAyTDUzLjU4IDEyOS4zNE0tOS45NSAyNC4wMkwtNTMuNTggMTI5LjM0TS0yNC4wMiA5Ljk1TC0xMjkuMzQgNTMuNThNLTI0LjAyIC05Ljk1TC0xMjkuMzQgLTUzLjU4TS05Ljk1IC0yNC4wMkwtNTMuNTggLTEyOS4zNE05Ljk1IC0yNC4wMkw1My41OCAtMTI5LjM0TTI0LjAyIC05Ljk1TDEyOS4zNCAtNTMuNTgiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzhhOGY5NCIgc3Ryb2tlLW9wYWNpdHk9IjAuMiIvPjxwYXRoIGQ9Ik01OS45NSAtMjIuNDFBNjQgNjQgMCAwIDEgNTkuOTUgMjIuNDFNLTU5Ljk1IDIyLjQxQTY0IDY0IDAgMCAxIC01OS45NSAtMjIuNDFNOTUuNTQgLTM1LjcyQTEwMiAxMDIgMCAwIDEgOTUuNTQgMzUuNzJNLTk1LjU0IDM1LjcyQTEwMiAxMDIgMCAwIDEgLTk1LjU0IC0zNS43MiIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjOGE4Zjk0IiBzdHJva2Utb3BhY2l0eT0iMC41IiBzdHJva2UtZGFzaGFycmF5PSIyIDMiLz48cGF0aCBkPSJNMCAwTDQ0LjU1IDQ0LjU1TDIuODMgLTIuODNaIiBmaWxsPSIjOGE4Zjk0IiBmaWxsLW9wYWNpdHk9IjAuMyIvPjxwYXRoIGQ9Ik0wIDBMNDQuNTUgNDQuNTVMLTIuODMgMi44M1oiIGZpbGw9IiM4YThmOTQiIGZpbGwtb3BhY2l0eT0iMC4xMiIvPjxwYXRoIGQ9Ik0wIDBMLTQ0LjU1IDQ0LjU1TDIuODMgMi44M1oiIGZpbGw9IiM4YThmOTQiIGZpbGwtb3BhY2l0eT0iMC4zIi8+PHBhdGggZD0iTTAgMEwtNDQuNTUgNDQuNTVMLTIuODMgLTIuODNaIiBmaWxsPSIjOGE4Zjk0IiBmaWxsLW9wYWNpdHk9IjAuMTIiLz48cGF0aCBkPSJNMCAwTC00NC41NSAtNDQuNTVMLTIuODMgMi44M1oiIGZpbGw9IiM4YThmOTQiIGZpbGwtb3BhY2l0eT0iMC4zIi8+PHBhdGggZD0iTTAgMEwtNDQuNTUgLTQ0LjU1TDIuODMgLTIuODNaIiBmaWxsPSIjOGE4Zjk0IiBmaWxsLW9wYWNpdHk9IjAuMTIiLz48cGF0aCBkPSJNMCAwTDQ0LjU1IC00NC41NUwtMi44MyAtMi44M1oiIGZpbGw9IiM4YThmOTQiIGZpbGwtb3BhY2l0eT0iMC4zIi8+PHBhdGggZD0iTTAgMEw0NC41NSAtNDQuNTVMMi44MyAyLjgzWiIgZmlsbD0iIzhhOGY5NCIgZmlsbC1vcGFjaXR5PSIwLjEyIi8+PHBhdGggZD0iTTAgMEwxMzAuMDAgMC4wMEwwLjAwIC04LjAwWiIgZmlsbD0iIzhhOGY5NCIgZmlsbC1vcGFjaXR5PSIwLjM4Ii8+PHBhdGggZD0iTTAgMEwxMzAuMDAgMC4wMEwwLjAwIDguMDBaIiBmaWxsPSIjOGE4Zjk0IiBmaWxsLW9wYWNpdHk9IjAuMTYiLz48cGF0aCBkPSJNMCAwTDAuMDAgMTMwLjAwTDguMDAgMC4wMFoiIGZpbGw9IiM4YThmOTQiIGZpbGwtb3BhY2l0eT0iMC4zOCIvPjxwYXRoIGQ9Ik0wIDBMMC4wMCAxMzAuMDBMLTguMDAgMC4wMFoiIGZpbGw9IiM4YThmOTQiIGZpbGwtb3BhY2l0eT0iMC4xNiIvPjxwYXRoIGQ9Ik0wIDBMLTEzMC4wMCAwLjAwTDAuMDAgOC4wMFoiIGZpbGw9IiM4YThmOTQiIGZpbGwtb3BhY2l0eT0iMC4zOCIvPjxwYXRoIGQ9Ik0wIDBMLTEzMC4wMCAwLjAwTC0wLjAwIC04LjAwWiIgZmlsbD0iIzhhOGY5NCIgZmlsbC1vcGFjaXR5PSIwLjE2Ii8+PHBhdGggZD0iTTAgMEwtMC4wMCAtMTMwLjAwTC04LjAwIDAuMDBaIiBmaWxsPSIjM2RhZWU5IiBmaWxsLW9wYWNpdHk9IjAuNiIvPjxwYXRoIGQ9Ik0wIDBMLTAuMDAgLTEzMC4wMEw4LjAwIC0wLjAwWiIgZmlsbD0iIzNkYWVlOSIgZmlsbC1vcGFjaXR5PSIwLjI4Ii8+PGNpcmNsZSByPSIyMyIgZmlsbD0iIzhhOGY5NCIgZmlsbC1vcGFjaXR5PSIwLjE1IiBzdHJva2U9IiM4YThmOTQiIHN0cm9rZS1vcGFjaXR5PSIwLjYiLz48dGV4dCB4PSItMC4wIiB5PSItMTQ1LjUiIGZpbGw9IiMzZGFlZTkiIGZvbnQtc2l6ZT0iMTMiIGZvbnQtd2VpZ2h0PSJib2xkIj5OPC90ZXh0Pjx0ZXh0IHg9IjE1MC4wIiB5PSI0LjUiIGZpbGw9IiM4YThmOTQiIGZvbnQtc2l6ZT0iMTIiIGZvbnQtd2VpZ2h0PSJib2xkIj5FPC90ZXh0Pjx0ZXh0IHg9IjAuMCIgeT0iMTU0LjUiIGZpbGw9IiM4YThmOTQiIGZvbnQtc2l6ZT0iMTIiIGZvbnQtd2VpZ2h0PSJib2xkIj5TPC90ZXh0Pjx0ZXh0IHg9Ii0xNTAuMCIgeT0iNC41IiBmaWxsPSIjOGE4Zjk0IiBmb250LXNpemU9IjEyIiBmb250LXdlaWdodD0iYm9sZCI+VzwvdGV4dD48dGV4dCB4PSI0NS4wIiB5PSItOC4wIiBmaWxsPSIjOGE4Zjk0IiBmb250LXNpemU9IjEwIj7ihZM8L3RleHQ+PHRleHQgeD0iLTQ1LjAiIHk9Ii04LjAiIGZpbGw9IiM4YThmOTQiIGZvbnQtc2l6ZT0iMTAiPuKFkzwvdGV4dD48dGV4dCB4PSI4My4wIiB5PSItOC4wIiBmaWxsPSIjOGE4Zjk0IiBmb250LXNpemU9IjEwIj7CvTwvdGV4dD48dGV4dCB4PSItODMuMCIgeT0iLTguMCIgZmlsbD0iIzhhOGY5NCIgZm9udC1zaXplPSIxMCI+wr08L3RleHQ+PHRleHQgeD0iMTIxLjAiIHk9Ii04LjAiIGZpbGw9IiM4YThmOTQiIGZvbnQtc2l6ZT0iMTAiPuKFlDwvdGV4dD48dGV4dCB4PSItMTIxLjAiIHk9Ii04LjAiIGZpbGw9IiM4YThmOTQiIGZvbnQtc2l6ZT0iMTAiPuKFlDwvdGV4dD48L3N2Zz4K"&gt;</string>
                       </property>
                       <property name="alignment">
                         <set>Qt::AlignTop|Qt::AlignHCenter</set>
@@ -25,307 +25,375 @@
                     </widget>
                   </item>
                   <item>
-                    <layout class="QFormLayout" name="compassForm">
-                      <item row="0" column="0">
+                    <spacer name="compassGap">
+                      <property name="orientation">
+                        <enum>Qt::Horizontal</enum>
+                      </property>
+                      <property name="sizeType">
+                        <enum>QSizePolicy::Fixed</enum>
+                      </property>
+                      <property name="sizeHint">
+                        <size>
+                          <width>16</width>
+                          <height>0</height>
+                        </size>
+                      </property>
+                    </spacer>
+                  </item>
+                  <item>
+                    <layout class="QVBoxLayout" name="compassSide">
+                      <item>
+                        <layout class="QFormLayout" name="compassForm">
+                          <property name="fieldGrowthPolicy">
+                            <enum>QFormLayout::FieldsStayAtSizeHint</enum>
+                          </property>
+                          <item row="0" column="0">
+                            <widget class="QLabel">
+                              <property name="text">
+                                <string>Opens after:</string>
+                              </property>
+                            </widget>
+                          </item>
+                          <item row="0" column="1">
+                            <widget class="QSpinBox" name="kcfg_dwellMs">
+                              <property name="minimum">
+                                <number>0</number>
+                              </property>
+                              <property name="maximum">
+                                <number>1000</number>
+                              </property>
+                              <property name="singleStep">
+                                <number>50</number>
+                              </property>
+                              <property name="suffix">
+                                <string> ms</string>
+                              </property>
+                              <property name="specialValueText">
+                                <string>Immediately</string>
+                              </property>
+                              <property name="toolTip">
+                                <string>How long the cursor rests before the compass opens. Immediately: as soon as you grab the window, once per drag.</string>
+                              </property>
+                            </widget>
+                          </item>
+                          <item row="1" column="0">
+                            <widget class="QLabel">
+                              <property name="text">
+                                <string>Size:</string>
+                              </property>
+                            </widget>
+                          </item>
+                          <item row="1" column="1">
+                            <widget class="QComboBox" name="kcfg_compassSize">
+                              <item>
+                                <property name="text">
+                                  <string>Small</string>
+                                </property>
+                              </item>
+                              <item>
+                                <property name="text">
+                                  <string>Medium</string>
+                                </property>
+                              </item>
+                              <item>
+                                <property name="text">
+                                  <string>Large</string>
+                                </property>
+                              </item>
+                            </widget>
+                          </item>
+                          <item row="2" column="0">
+                            <widget class="QLabel">
+                              <property name="text">
+                                <string>Center:</string>
+                              </property>
+                            </widget>
+                          </item>
+                          <item row="2" column="1">
+                            <widget class="QComboBox" name="kcfg_compassCenter">
+                              <item>
+                                <property name="text">
+                                  <string>Own size, centered</string>
+                                </property>
+                              </item>
+                              <item>
+                                <property name="text">
+                                  <string>Centered window</string>
+                                </property>
+                              </item>
+                              <item>
+                                <property name="text">
+                                  <string>Fill the screen (not maximized)</string>
+                                </property>
+                              </item>
+                              <item>
+                                <property name="text">
+                                  <string>Maximize</string>
+                                </property>
+                              </item>
+                              <item>
+                                <property name="text">
+                                  <string>Top half</string>
+                                </property>
+                              </item>
+                              <item>
+                                <property name="text">
+                                  <string>Bottom half</string>
+                                </property>
+                              </item>
+                              <item>
+                                <property name="text">
+                                  <string>Nothing</string>
+                                </property>
+                              </item>
+                            </widget>
+                          </item>
+                          <item row="3" column="0">
+                            <widget class="QLabel">
+                              <property name="text">
+                                <string>North:</string>
+                              </property>
+                            </widget>
+                          </item>
+                          <item row="3" column="1">
+                            <widget class="QComboBox" name="kcfg_compassNorth">
+                              <item>
+                                <property name="text">
+                                  <string>Own size, centered</string>
+                                </property>
+                              </item>
+                              <item>
+                                <property name="text">
+                                  <string>Centered window</string>
+                                </property>
+                              </item>
+                              <item>
+                                <property name="text">
+                                  <string>Fill the screen (not maximized)</string>
+                                </property>
+                              </item>
+                              <item>
+                                <property name="text">
+                                  <string>Maximize</string>
+                                </property>
+                              </item>
+                              <item>
+                                <property name="text">
+                                  <string>Top half</string>
+                                </property>
+                              </item>
+                              <item>
+                                <property name="text">
+                                  <string>Bottom half</string>
+                                </property>
+                              </item>
+                              <item>
+                                <property name="text">
+                                  <string>Nothing</string>
+                                </property>
+                              </item>
+                            </widget>
+                          </item>
+                          <item row="4" column="0">
+                            <widget class="QLabel">
+                              <property name="text">
+                                <string>South:</string>
+                              </property>
+                            </widget>
+                          </item>
+                          <item row="4" column="1">
+                            <widget class="QComboBox" name="kcfg_compassSouth">
+                              <item>
+                                <property name="text">
+                                  <string>Own size, centered</string>
+                                </property>
+                              </item>
+                              <item>
+                                <property name="text">
+                                  <string>Centered window</string>
+                                </property>
+                              </item>
+                              <item>
+                                <property name="text">
+                                  <string>Fill the screen (not maximized)</string>
+                                </property>
+                              </item>
+                              <item>
+                                <property name="text">
+                                  <string>Maximize</string>
+                                </property>
+                              </item>
+                              <item>
+                                <property name="text">
+                                  <string>Top half</string>
+                                </property>
+                              </item>
+                              <item>
+                                <property name="text">
+                                  <string>Bottom half</string>
+                                </property>
+                              </item>
+                              <item>
+                                <property name="text">
+                                  <string>Nothing</string>
+                                </property>
+                              </item>
+                            </widget>
+                          </item>
+                          <item row="5" column="0">
+                            <widget class="QLabel">
+                              <property name="text">
+                                <string>West and east:</string>
+                              </property>
+                            </widget>
+                          </item>
+                          <item row="5" column="1">
+                            <widget class="QLineEdit" name="kcfg_compassRings">
+                              <property name="toolTip">
+                                <string>Widths in percent, one to four, narrowest nearest the center.</string>
+                              </property>
+                              <property name="placeholderText">
+                                <string>33, 50, 67</string>
+                              </property>
+                              <property name="maximumWidth">
+                                <number>140</number>
+                              </property>
+                            </widget>
+                          </item>
+                          <item row="6" column="0">
+                            <widget class="QLabel">
+                              <property name="text">
+                                <string>Diagonals:</string>
+                              </property>
+                            </widget>
+                          </item>
+                          <item row="6" column="1">
+                            <widget class="QComboBox" name="kcfg_compassCorners">
+                              <item>
+                                <property name="text">
+                                  <string>Off</string>
+                                </property>
+                              </item>
+                              <item>
+                                <property name="text">
+                                  <string>Corner quarters</string>
+                                </property>
+                              </item>
+                              <item>
+                                <property name="text">
+                                  <string>Corner quarters in the widths above</string>
+                                </property>
+                              </item>
+                            </widget>
+                          </item>
+                          <item row="7" column="0">
+                            <widget class="QLabel">
+                              <property name="text">
+                                <string>Centered window:</string>
+                              </property>
+                            </widget>
+                          </item>
+                          <item row="7" column="1">
+                            <layout class="QHBoxLayout" name="centeredRow">
+                              <item>
+                                <widget class="QSpinBox" name="kcfg_centeredWidth">
+                                  <property name="minimum">
+                                    <number>10</number>
+                                  </property>
+                                  <property name="maximum">
+                                    <number>100</number>
+                                  </property>
+                                  <property name="singleStep">
+                                    <number>5</number>
+                                  </property>
+                                  <property name="suffix">
+                                    <string> %</string>
+                                  </property>
+                                  <property name="toolTip">
+                                    <string>Width</string>
+                                  </property>
+                                </widget>
+                              </item>
+                              <item>
+                                <widget class="QLabel">
+                                  <property name="text">
+                                    <string>×</string>
+                                  </property>
+                                </widget>
+                              </item>
+                              <item>
+                                <widget class="QSpinBox" name="kcfg_centeredHeight">
+                                  <property name="minimum">
+                                    <number>10</number>
+                                  </property>
+                                  <property name="maximum">
+                                    <number>100</number>
+                                  </property>
+                                  <property name="singleStep">
+                                    <number>5</number>
+                                  </property>
+                                  <property name="suffix">
+                                    <string> %</string>
+                                  </property>
+                                  <property name="toolTip">
+                                    <string>Height</string>
+                                  </property>
+                                </widget>
+                              </item>
+                              <item>
+                                <spacer name="centeredSpacer">
+                                  <property name="orientation">
+                                    <enum>Qt::Horizontal</enum>
+                                  </property>
+                                  <property name="sizeHint">
+                                    <size>
+                                      <width>0</width>
+                                      <height>0</height>
+                                    </size>
+                                  </property>
+                                </spacer>
+                              </item>
+                            </layout>
+                          </item>
+                        </layout>
+                      </item>
+                      <item>
                         <widget class="QLabel">
                           <property name="text">
-                            <string>Opens after:</string>
+                            <string>Grab a window and the compass opens around the cursor; drop on a slot to place the window. Own size is the size the application first opened with, or the size you last gave it by hand. Move away from the compass and drop to leave the window where it is; Esc cancels the move.</string>
+                          </property>
+                          <property name="wordWrap">
+                            <bool>true</bool>
                           </property>
                         </widget>
                       </item>
-                      <item row="0" column="1">
-                        <widget class="QSpinBox" name="kcfg_dwellMs">
-                          <property name="minimum">
-                            <number>0</number>
+                      <item>
+                        <spacer name="compassSideSpacer">
+                          <property name="orientation">
+                            <enum>Qt::Vertical</enum>
                           </property>
-                          <property name="maximum">
-                            <number>1000</number>
+                          <property name="sizeHint">
+                            <size>
+                              <width>0</width>
+                              <height>0</height>
+                            </size>
                           </property>
-                          <property name="singleStep">
-                            <number>50</number>
-                          </property>
-                          <property name="suffix">
-                            <string> ms</string>
-                          </property>
-                          <property name="specialValueText">
-                            <string>Immediately</string>
-                          </property>
-                          <property name="toolTip">
-                            <string>How long the cursor rests before the compass opens. Immediately: it opens as soon as you grab the window, once per drag.</string>
-                          </property>
-                        </widget>
-                      </item>
-                      <item row="1" column="0">
-                        <widget class="QLabel">
-                          <property name="text">
-                            <string>Size:</string>
-                          </property>
-                        </widget>
-                      </item>
-                      <item row="1" column="1">
-                        <widget class="QComboBox" name="kcfg_compassSize">
-                          <item>
-                            <property name="text">
-                              <string>Small</string>
-                            </property>
-                          </item>
-                          <item>
-                            <property name="text">
-                              <string>Medium</string>
-                            </property>
-                          </item>
-                          <item>
-                            <property name="text">
-                              <string>Large</string>
-                            </property>
-                          </item>
-                        </widget>
-                      </item>
-                      <item row="2" column="0">
-                        <widget class="QLabel">
-                          <property name="text">
-                            <string>Center:</string>
-                          </property>
-                        </widget>
-                      </item>
-                      <item row="2" column="1">
-                        <widget class="QComboBox" name="kcfg_compassCenter">
-                          <item>
-                            <property name="text">
-                              <string>Own size, centered</string>
-                            </property>
-                          </item>
-                          <item>
-                            <property name="text">
-                              <string>Centered window</string>
-                            </property>
-                          </item>
-                          <item>
-                            <property name="text">
-                              <string>Fill the screen (not maximized)</string>
-                            </property>
-                          </item>
-                          <item>
-                            <property name="text">
-                              <string>Maximize</string>
-                            </property>
-                          </item>
-                          <item>
-                            <property name="text">
-                              <string>Top half</string>
-                            </property>
-                          </item>
-                          <item>
-                            <property name="text">
-                              <string>Bottom half</string>
-                            </property>
-                          </item>
-                          <item>
-                            <property name="text">
-                              <string>Nothing</string>
-                            </property>
-                          </item>
-                        </widget>
-                      </item>
-                      <item row="3" column="0">
-                        <widget class="QLabel">
-                          <property name="text">
-                            <string>North:</string>
-                          </property>
-                        </widget>
-                      </item>
-                      <item row="3" column="1">
-                        <widget class="QComboBox" name="kcfg_compassNorth">
-                          <item>
-                            <property name="text">
-                              <string>Own size, centered</string>
-                            </property>
-                          </item>
-                          <item>
-                            <property name="text">
-                              <string>Centered window</string>
-                            </property>
-                          </item>
-                          <item>
-                            <property name="text">
-                              <string>Fill the screen (not maximized)</string>
-                            </property>
-                          </item>
-                          <item>
-                            <property name="text">
-                              <string>Maximize</string>
-                            </property>
-                          </item>
-                          <item>
-                            <property name="text">
-                              <string>Top half</string>
-                            </property>
-                          </item>
-                          <item>
-                            <property name="text">
-                              <string>Bottom half</string>
-                            </property>
-                          </item>
-                          <item>
-                            <property name="text">
-                              <string>Nothing</string>
-                            </property>
-                          </item>
-                        </widget>
-                      </item>
-                      <item row="4" column="0">
-                        <widget class="QLabel">
-                          <property name="text">
-                            <string>South:</string>
-                          </property>
-                        </widget>
-                      </item>
-                      <item row="4" column="1">
-                        <widget class="QComboBox" name="kcfg_compassSouth">
-                          <item>
-                            <property name="text">
-                              <string>Own size, centered</string>
-                            </property>
-                          </item>
-                          <item>
-                            <property name="text">
-                              <string>Centered window</string>
-                            </property>
-                          </item>
-                          <item>
-                            <property name="text">
-                              <string>Fill the screen (not maximized)</string>
-                            </property>
-                          </item>
-                          <item>
-                            <property name="text">
-                              <string>Maximize</string>
-                            </property>
-                          </item>
-                          <item>
-                            <property name="text">
-                              <string>Top half</string>
-                            </property>
-                          </item>
-                          <item>
-                            <property name="text">
-                              <string>Bottom half</string>
-                            </property>
-                          </item>
-                          <item>
-                            <property name="text">
-                              <string>Nothing</string>
-                            </property>
-                          </item>
-                        </widget>
-                      </item>
-                      <item row="5" column="0">
-                        <widget class="QLabel">
-                          <property name="text">
-                            <string>West and east widths:</string>
-                          </property>
-                        </widget>
-                      </item>
-                      <item row="5" column="1">
-                        <widget class="QLineEdit" name="kcfg_compassRings">
-                          <property name="toolTip">
-                            <string>One to four percentages, narrowest nearest the center.</string>
-                          </property>
-                          <property name="placeholderText">
-                            <string>33, 50, 67</string>
-                          </property>
-                        </widget>
-                      </item>
-                      <item row="6" column="0">
-                        <widget class="QLabel">
-                          <property name="text">
-                            <string>Diagonals:</string>
-                          </property>
-                        </widget>
-                      </item>
-                      <item row="6" column="1">
-                        <widget class="QComboBox" name="kcfg_compassCorners">
-                          <item>
-                            <property name="text">
-                              <string>Off</string>
-                            </property>
-                          </item>
-                          <item>
-                            <property name="text">
-                              <string>Corner quarters</string>
-                            </property>
-                          </item>
-                          <item>
-                            <property name="text">
-                              <string>Corner quarters in the widths above</string>
-                            </property>
-                          </item>
-                        </widget>
-                      </item>
-                      <item row="7" column="0">
-                        <widget class="QLabel">
-                          <property name="text">
-                            <string>Centered window width:</string>
-                          </property>
-                        </widget>
-                      </item>
-                      <item row="7" column="1">
-                        <widget class="QSpinBox" name="kcfg_centeredWidth">
-                          <property name="minimum">
-                            <number>10</number>
-                          </property>
-                          <property name="maximum">
-                            <number>100</number>
-                          </property>
-                          <property name="singleStep">
-                            <number>5</number>
-                          </property>
-                          <property name="suffix">
-                            <string> %</string>
-                          </property>
-                        </widget>
-                      </item>
-                      <item row="8" column="0">
-                        <widget class="QLabel">
-                          <property name="text">
-                            <string>Centered window height:</string>
-                          </property>
-                        </widget>
-                      </item>
-                      <item row="8" column="1">
-                        <widget class="QSpinBox" name="kcfg_centeredHeight">
-                          <property name="minimum">
-                            <number>10</number>
-                          </property>
-                          <property name="maximum">
-                            <number>100</number>
-                          </property>
-                          <property name="singleStep">
-                            <number>5</number>
-                          </property>
-                          <property name="suffix">
-                            <string> %</string>
-                          </property>
-                        </widget>
+                        </spacer>
                       </item>
                     </layout>
                   </item>
                 </layout>
               </item>
               <item>
-                <widget class="QLabel">
-                  <property name="text">
-                    <string>Drag a window and rest the cursor: the compass opens around it. Drop on a slot to place the window. Own size: the size the application first opened with, or the size you last gave it by hand. Move away from the compass and drop to leave the window where it is. Esc cancels the move.</string>
-                  </property>
-                  <property name="wordWrap">
-                    <bool>true</bool>
-                  </property>
-                </widget>
-              </item>
-              <item>
                 <spacer name="compassTabSpacer">
                   <property name="orientation">
                     <enum>Qt::Vertical</enum>
+                  </property>
+                  <property name="sizeHint">
+                    <size>
+                      <width>0</width>
+                      <height>0</height>
+                    </size>
                   </property>
                 </spacer>
               </item>
@@ -379,6 +447,12 @@
                   <property name="orientation">
                     <enum>Qt::Vertical</enum>
                   </property>
+                  <property name="sizeHint">
+                    <size>
+                      <width>0</width>
+                      <height>0</height>
+                    </size>
+                  </property>
                 </spacer>
               </item>
             </layout>
@@ -405,6 +479,12 @@
                 <spacer name="exceptionsTabSpacer">
                   <property name="orientation">
                     <enum>Qt::Vertical</enum>
+                  </property>
+                  <property name="sizeHint">
+                    <size>
+                      <width>0</width>
+                      <height>0</height>
+                    </size>
                   </property>
                 </spacer>
               </item>
