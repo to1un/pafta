@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>pafta</title>
+<meta name="description" content="A compass for placing windows while you drag them. KWin script for KDE Plasma 6.">
+<style>
+  :root {
+    --bg: #f6f6f7; --fg: #1b1b1f; --muted: #5d5d66; --card: #ffffff; --line: #e2e2e6;
+    --code: #efeff2; --accent: #1d8fce; --desk: #dcdde3; --panel: #c9cad1;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #111114; --fg: #ececf0; --muted: #9a9aa5; --card: #1b1b20; --line: #2f2f37; --code: #1f1f25;
+            --accent: #3daee9; --desk: #232329; --panel: #18181c; }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--fg); font: 16px/1.6 system-ui, sans-serif; }
+  main { max-width: 760px; margin: 0 auto; padding: 56px 16px 80px; }
+  h1 { font-size: 2.2rem; margin: 0 0 8px; letter-spacing: -0.02em; }
+  h2 { font-size: 1.15rem; margin: 48px 0 12px; }
+  p.lead { color: var(--muted); font-size: 1.15rem; margin: 0 0 32px; }
+  a { color: var(--accent); }
+  code, pre { font: 14px/1.5 ui-monospace, monospace; background: var(--code); border-radius: 6px; }
+  code { padding: 1px 5px; }
+  pre { padding: 12px 14px; overflow-x: auto; }
+  img { max-width: 100%; border-radius: 8px; }
+
+  /* the demo: a small desktop, two windows, the compass */
+  .stage { display: block; width: 100%; height: auto; border-radius: 12px; border: 1px solid var(--line); background: var(--desk); }
+  .stage .desk { fill: var(--desk); }
+  .stage .panel { fill: var(--panel); }
+  .stage .win { fill: var(--card); stroke: var(--line); width: calc(100% - 1px); height: calc(100% - 1px); }
+  .stage .line { stroke: var(--line); }
+  .stage .title { fill: var(--muted); font: 12px system-ui, sans-serif; }
+  .stage .text { fill: var(--line); }
+  .stage .preview { fill: #3daee9; fill-opacity: .15; stroke: #3daee9; stroke-width: 2; }
+  .stage .compass { color: var(--fg); }
+  .stage .compass .base { fill: var(--card); fill-opacity: .95; }
+  .stage .cursor { fill: #fff; stroke: #111; stroke-width: 1; }
+
+  ul.slots { padding-left: 20px; } ul.slots li { margin: 6px 0; }
+  footer { margin-top: 64px; color: var(--muted); font-size: 14px; }
+
+  body.capture { background: transparent; } body.capture main > :not(.stage) { display: none; }
+  body.capture main { padding: 0; max-width: none; } body.capture .stage { width: 760px; border-radius: 0; border: 0; }
+</style>
+</head>
+<body>
+<main>
+  <h1>pafta</h1>
+  <p class="lead">Grab a window and a compass opens under the cursor. Drop it on a slot and the window takes that place. A KWin script for KDE Plasma 6.</p>
+
+  <svg class="stage" id="stage" role="img" aria-label="Animated demo: windows are dragged onto the compass: north fills the screen, east takes a third, west two thirds, the hub puts a window back to its own size"></svg>
+
+  <h2>The compass</h2>
+  <ul class="slots">
+    <li><b>North</b> fills the screen without maximizing. <b>South</b> centers the window at 70 × 75 %.</li>
+    <li><b>West and east</b> hold widths: ⅓, ½ and ⅔ from the hub outwards, full height.</li>
+    <li><b>Diagonals</b> are the four corner quarters.</li>
+    <li><b>The hub</b> puts the window back to its own size: the size the application first opened with, or the last size you gave it by hand.</li>
+    <li>Move away from the compass and drop to leave the window where it is. <b>Esc</b> cancels the move.</li>
+  </ul>
+  <p>Each slot can be changed, and the compass can wait for the cursor to rest before it opens. pafta also remembers where applications were placed and restores un-maximized windows to their place. Plasma's own tiles (Meta+T, Shift+drag) are left as they are.</p>
+
+  <h2>Settings</h2>
+  <p>System Settings → Window Management → KWin Scripts → pafta → configure. Changes apply to the next drag.</p>
+  <img src="config.png" alt="pafta settings: the compass beside its options" width="760">
+
+  <h2>Install</h2>
+  <p>KDE Plasma 6. Developed on Plasma 6.8 (Wayland).</p>
+<pre>git clone https://github.com/to1un/pafta
+kpackagetool6 --type=KWin/Script --install pafta/package</pre>
+  <p>Then tick pafta in KWin Scripts and press Apply. Updating and removing are in the <a href="https://github.com/to1un/pafta#readme">README</a>.</p>
+
+  <footer>GPL-3.0-or-later · <a href="https://github.com/to1un/pafta">GitHub</a> · <a href="https://to1un.com">to1un.com</a></footer>
+</main>
+<script src="geometry.js"></script>
+<script src="compass.js"></script>
+<script src="demo.js"></script>
+<script>
+  const demo = PaftaDemo.make(document.getElementById('stage'));
+  window.renderAt = demo.render;  // used by the capture script
+  if (new URLSearchParams(location.search).has('capture')) {
+    document.body.classList.add('capture');
+  } else if (matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    demo.render(2.6);  // one still frame: the compass open over north
+  } else {
+    const t0 = performance.now();
+    (function loop(now) { demo.render((now - t0) / 1000); requestAnimationFrame(loop); })(t0);
+  }
+</script>
+</body>
+</html>

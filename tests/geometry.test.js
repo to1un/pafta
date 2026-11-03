@@ -268,3 +268,11 @@ test('pt / arcPath / rad / dist helpers', () => {
     approx(G.dist({ x: 0, y: 0 }, { x: 3, y: 4 }), 5);
     assert.match(G.arcPath(0, Math.PI / 2, 10, 20), /^M20\.00 0\.00A20 20 0 0 1 0\.00 20\.00L0\.00 10\.00A10 10 0 0 0 10\.00 0\.00Z$/);
 });
+
+// ---- docs ------------------------------------------------------------------
+
+test('docs/geometry.js is generated from the current geometry.js', () => {
+    const { build } = require(path.join(__dirname, '..', 'tools', 'docs-geometry.js'));
+    assert.equal(fs.readFileSync(path.join(__dirname, '..', 'docs', 'geometry.js'), 'utf8'), build(),
+        'run: node tools/docs-geometry.js');
+});
