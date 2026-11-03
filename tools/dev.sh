@@ -60,7 +60,7 @@ sandbox() {
 case "${1:-}" in
     sandbox) shift; sandbox "$@" ;;
     install) install ;;
-    enable) set_enabled true ;;
+    enable) set_enabled true; reload ;; # toggling alone can run stale cached QML
     disable) set_enabled false ;;
     reload) reload ;;
     reconfigure) reconfigure ;;
