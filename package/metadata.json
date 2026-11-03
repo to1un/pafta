@@ -13,7 +13,8 @@
         "Id": "pafta",
         "License": "GPL-3.0-or-later",
         "Name": "pafta",
-        "Version": "0.1.0"
+        "Version": "1.0.0",
+        "Website": "https://to1un.github.io/pafta/"
     },
     "X-KDE-ConfigModule": "kwin/effects/configs/kcm_kwin4_genericscripted",
     "X-KWin-Config-TranslationDomain": "pafta",
