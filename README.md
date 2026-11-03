@@ -6,8 +6,6 @@ A compass for placing windows while you drag them: a KWin script for KDE Plasma 
 
 Grab a window and the compass opens under the cursor. Drop it on a slot and the window takes that place; move away and drop to leave it where it is. Plasma's own tiles (Meta+T, Shift+drag) are left as they are.
 
-Website: https://to1un.github.io/pafta/
-
 ## Requirements
 
 - KDE Plasma 6
