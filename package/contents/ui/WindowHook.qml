@@ -8,9 +8,9 @@ Connections {
     property var window
     property var handler
     property var restore: null          // { frame, output } from before the window was maximized
-    property QtObject restoreTile: null // its tile then; a guarded pointer, null once KWin deletes the tile
-    property var natural: null          // own size { width, height }, see main.qml naturalSize()
-    property bool resizing: false
+    property QtObject restoreTile: null // its tile then; guarded pointer
+    property bool userTouched: false
+    property bool restoring: false
 
     target: window
 

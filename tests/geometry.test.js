@@ -11,7 +11,6 @@ const path = require('node:path');
 
 const PKG = path.join(__dirname, '..', 'package', 'contents');
 
-// Load the library in this realm: drop the pragma and return every top-level function/var.
 function load(file) {
     const src = fs.readFileSync(file, 'utf8').replace(/^\.pragma library.*$/m, '');
     const names = [...src.matchAll(/^(?:function|var)\s+(\w+)/gm)].map(m => m[1]);
@@ -25,241 +24,119 @@ const approxRect = (got, want, eps = 1e-9, msg = '') => {
         approx(got[k], want[k], eps, `${msg} .${k}`);
 };
 
-// ---- compass ---------------------------------------------------------------
-
 const center = { x: 500, y: 500 };
-const slots = G.DEFAULT_SLOTS;
-const rings3 = G.DEFAULT_RINGS; // [33, 50, 67]
-// Point at `deg` (0 = east, clockwise on screen) and radius `r` from the center.
 const at = (deg, r) => ({ x: center.x + Math.cos(deg * Math.PI / 180) * r, y: center.y + Math.sin(deg * Math.PI / 180) * r });
-const DIRS8 = { e: 0, se: 45, s: 90, sw: 135, w: 180, nw: 225, n: 270, ne: 315 };
 
-test('compassGeometry: sizes and modes', () => {
-    const expectRB = { small: 105, medium: 130, large: 160 };
+test('compassGeometry: sizes and 4 sectors', () => {
+    const expectRB = { small: 90, medium: 110, large: 130 };
     for (const [size, rb] of Object.entries(expectRB)) {
-        const g = G.compassGeometry(size, 'off');
+        const g = G.compassGeometry(size);
         assert.equal(g.RB, rb, size);
-        assert.equal(g.R3, rb - 20, size);
-        assert.equal(g.R0, Math.round(rb * 0.16), size);
-        assert.equal(g.cornerRings, false);
+        assert.equal(g.R3, rb - 18, size);
+        assert.equal(g.R0, Math.round(rb * 0.25), size);
         assert.equal(g.sectors.length, 4);
     }
-    assert.equal(G.compassGeometry('bogus', 'off').RB, 130, 'unknown size -> medium');
-    assert.equal(G.compassGeometry('medium').sectors.length, 4, 'undefined corners = off');
-    const q = G.compassGeometry('medium', 'quarters');
-    assert.equal(q.sectors.length, 8);
-    assert.equal(q.cornerRings, false);
-    const r = G.compassGeometry('medium', 'rings');
-    assert.equal(r.sectors.length, 8);
-    assert.equal(r.cornerRings, true);
+    assert.equal(G.compassGeometry('bogus').RB, 110, 'unknown size -> medium');
 });
 
-test('compassHit: corners=rings, 8 directions x every ring, inside the 45 deg sector', () => {
-    const C = G.compassGeometry('medium', 'rings');
-    const band = (C.R3 - C.R0) / rings3.length;
-    for (const [d, deg] of Object.entries(DIRS8)) {
-        for (let j = 0; j < rings3.length; ++j) {
-            const want = d === 'n' || d === 's' ? d : d + j;
-            for (const off of [-20, 0, 20])
-                assert.equal(G.compassHit(center, at(deg + off, C.R0 + (j + 0.5) * band), rings3.length, slots, C), want, `${d} ring ${j} off ${off}`);
+test('compassHit: 4 cardinal sectors, hub, and outer slack', () => {
+    const C = G.compassGeometry('medium');
+    assert.equal(G.compassHit(center, center, C), 'c');
+    assert.equal(G.compassHit(center, at(45, C.R0 - 2), C), 'c');
+    for (const [key, deg] of [['e', 0], ['s', 90], ['w', 180], ['n', 270]]) {
+        for (const off of [-40, 0, 40]) {
+            assert.equal(G.compassHit(center, at(deg + off, C.R0 + 10), C), key, `${key} off ${off}`);
+            assert.equal(G.compassHit(center, at(deg + off, C.RB + 39), C), key, `${key} slack off ${off}`);
         }
+        assert.equal(G.compassHit(center, at(deg, C.RB + 41), C), '', `${key} past slack`);
     }
 });
 
-test('compassHit: outermost ring reaches past R3 up to the bezel slack', () => {
-    const C = G.compassGeometry('medium', 'rings');
-    assert.equal(G.compassHit(center, at(0, C.RB + 39), 3, slots, C), 'e2');
-    assert.equal(G.compassHit(center, at(180, C.RB + 39), 3, slots, C), 'w2');
-    assert.equal(G.compassHit(center, at(45, C.RB + 39), 3, slots, C), 'se2');
-    assert.equal(G.compassHit(center, at(45, C.RB + 41), 3, slots, C), '', 'past bezel + slack');
-    assert.equal(G.compassHit(center, at(0, C.RB + 41), 3, slots, C), '');
+test('slotFromCompassKey maps sectors cleanly', () => {
+    assert.equal(G.slotFromCompassKey('w'), 'left');
+    assert.equal(G.slotFromCompassKey('e'), 'right');
+    assert.equal(G.slotFromCompassKey('n'), 'fill');
+    assert.equal(G.slotFromCompassKey('s'), 'center');
+    assert.equal(G.slotFromCompassKey('c'), '');
+    assert.equal(G.slotFromCompassKey(''), '');
 });
 
-test('compassHit: ring index clamps to the configured ring count', () => {
-    const C = G.compassGeometry('medium', 'rings');
-    for (const n of [1, 2, 3, 4]) {
-        assert.equal(G.compassHit(center, at(0, C.R0 + 1), n, slots, C), 'e0');
-        assert.equal(G.compassHit(center, at(0, C.RB + 30), n, slots, C), 'e' + (n - 1));
-    }
+test('inTopTrigger covers full screen width including right side', () => {
+    const area = { x: 100, y: 20, width: 1920, height: 1030 };
+    assert.ok(G.inTopTrigger({ x: 100, y: 20 }, area), 'top-left corner');
+    assert.ok(G.inTopTrigger({ x: 1060, y: 35 }, area), 'top-center');
+    assert.ok(G.inTopTrigger({ x: 1850, y: 56 }, area), 'top-right (Obsidian drag)');
+    assert.ok(!G.inTopTrigger({ x: 1850, y: 57 }, area), 'below trigger band');
+    assert.ok(!G.inTopTrigger({ x: 99, y: 25 }, area), 'left of output area');
+    assert.ok(!G.inTopTrigger({ x: 2021, y: 25 }, area), 'right of output area');
 });
 
-test('compassHit: hub', () => {
-    const C = G.compassGeometry('medium', 'rings');
-    assert.equal(G.compassHit(center, center, 3, slots, C), 'c');
-    assert.equal(G.compassHit(center, at(10, C.R0 - 4), 3, slots, C), 'c');
-    assert.equal(G.compassHit(center, at(10, C.R0 - 2), 3, slots, C), '', 'dead band at the hub edge');
-    assert.equal(G.compassHit(center, center, 3, { c: 'none', n: 'fill', s: 'centered' }, C), '', 'hub disabled');
+test('compassCenterAtTop tracks cursor X and clamps to screen bounds', () => {
+    const area = { x: 0, y: 0, width: 1920, height: 1030 };
+    const geo = G.compassGeometry('medium'); // RB = 110
+    assert.deepEqual(G.compassCenterAtTop(1600, area, geo), { x: 1600, y: 124 });
+    assert.deepEqual(G.compassCenterAtTop(20, area, geo), { x: 126, y: 124 });
+    assert.deepEqual(G.compassCenterAtTop(1910, area, geo), { x: 1794, y: 124 });
 });
 
-test('compassHit: none slots disable n/s', () => {
-    const C = G.compassGeometry('medium', 'rings');
-    const off = { c: 'centered', n: 'none', s: 'none' };
-    assert.equal(G.compassHit(center, at(270, 60), 3, off, C), '');
-    assert.equal(G.compassHit(center, at(90, 60), 3, off, C), '');
-    assert.equal(G.compassHit(center, at(270, 60), 3, slots, C), 'n');
-    assert.equal(G.compassHit(center, at(90, 60), 3, slots, C), 's');
+test('compassDismissed when pulled down or well sideways', () => {
+    const geo = G.compassGeometry('medium'); // RB = 110
+    const c = { x: 1600, y: 124 };
+    assert.ok(!G.compassDismissed(c, { x: 1600, y: 270 }, geo));
+    assert.ok(G.compassDismissed(c, { x: 1600, y: 271 }, geo));
+    assert.ok(!G.compassDismissed(c, { x: 1770, y: 124 }, geo));
+    assert.ok(G.compassDismissed(c, { x: 1771, y: 124 }, geo));
 });
 
-test('compassHit: sector boundaries (45 deg sectors with corners)', () => {
-    const C = G.compassGeometry('medium', 'rings');
-    assert.equal(G.compassHit(center, at(22.4, 60), 3, slots, C), 'e1');
-    assert.equal(G.compassHit(center, at(22.6, 60), 3, slots, C), 'se1');
-    assert.equal(G.compassHit(center, at(67.4, 60), 3, slots, C), 'se1');
-    assert.equal(G.compassHit(center, at(67.6, 60), 3, slots, C), 's');
+test('normalizeLayout clamps values and preserves explicit 0 gaps', () => {
+    assert.deepEqual(G.normalizeLayout(null), G.DEFAULT_LAYOUT);
+    assert.deepEqual(
+        G.normalizeLayout({ split: 10, outerX: 0, outerY: 0, innerGap: 0, centerW: 120, centerH: 5 }),
+        { split: 25, outerX: 0, outerY: 0, innerGap: 0, centerW: 95, centerH: 20 }
+    );
 });
 
-test('compassHit: corners=off uses four 90 deg sectors, no diagonals', () => {
-    const C = G.compassGeometry('medium', 'off');
-    for (const deg of [0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330]) {
-        const hit = G.compassHit(center, at(deg, 60), 3, slots, C);
-        const dir = (deg > 315 || deg < 45) ? 'e' : deg < 135 ? 's' : deg < 225 ? 'w' : 'n';
-        assert.equal(hit, dir === 'n' || dir === 's' ? dir : dir + '1', `deg ${deg}`);
-    }
+test('slotRect computes asymmetric outerX, outerY, innerGap, split, and center', () => {
+    const area = { x: 0, y: 0, width: 1920, height: 1030 };
+    const layout = { split: 60, outerX: 16, outerY: 10, innerGap: 8, centerW: 50, centerH: 70 };
+    // availW = 1920 - 32 = 1888; availH = 1030 - 20 = 1010
+    // leftW = round((1888 - 8) * 0.6) = round(1128) = 1128
+    // rightX = 16 + 1128 + 8 = 1152; rightW = (16 + 1888) - 1152 = 752
+    assert.deepEqual(G.slotRect('fill', area, layout), { x: 16, y: 10, width: 1888, height: 1010 });
+    assert.deepEqual(G.slotRect('left', area, layout), { x: 16, y: 10, width: 1128, height: 1010 });
+    assert.deepEqual(G.slotRect('right', area, layout), { x: 1152, y: 10, width: 752, height: 1010 });
+    assert.deepEqual(G.slotRect('w', area, layout), G.slotRect('left', area, layout));
+    assert.deepEqual(G.slotRect('e', area, layout), G.slotRect('right', area, layout));
+    assert.deepEqual(G.slotRect('n', area, layout), G.slotRect('fill', area, layout));
+
+    // center: cw = 944, ch = 707 -> x = 16 + (1888-944)/2 = 488, y = 10 + round((1010-707)/2) = 162
+    assert.deepEqual(G.slotRect('center', area, layout), { x: 488, y: 162, width: 944, height: 707 });
+    assert.deepEqual(G.slotRect('s', area, layout), G.slotRect('center', area, layout));
+    assert.equal(G.slotRect('bogus', area, layout), null);
 });
 
-test('compassHit: corners=quarters gives whole diagonals (no ring suffix)', () => {
-    const C = G.compassGeometry('medium', 'quarters');
-    for (const d of ['ne', 'nw', 'se', 'sw'])
-        for (const r of [C.R0 + 1, 50, C.R3 - 1, C.RB + 39])
-            assert.equal(G.compassHit(center, at(DIRS8[d], r), 3, slots, C), d, `${d} r=${r}`);
-    assert.equal(G.compassHit(center, at(0, C.R0 + 1), 3, slots, C), 'e0');
-    assert.equal(G.compassHit(center, at(180, C.RB + 39), 3, slots, C), 'w2');
-});
-
-test('compassPlacement: e/w rings are full-height columns', () => {
-    const opts = { rings: rings3, slots, cw: 70, ch: 75 };
-    const w = [1 / 3, 1 / 2, 2 / 3];
-    for (let j = 0; j < 3; ++j) {
-        approxRect(G.compassPlacement('w' + j, opts).frac, { x: 0, y: 0, w: w[j], h: 1 });
-        approxRect(G.compassPlacement('e' + j, opts).frac, { x: 1 - w[j], y: 0, w: w[j], h: 1 });
-        assert.equal(G.compassPlacement('e' + j, opts).max, false);
-    }
-});
-
-test('compassPlacement: diagonals are half-height corners', () => {
-    const opts = { rings: rings3, slots, cw: 70, ch: 75 };
-    approxRect(G.compassPlacement('nw', opts).frac, { x: 0, y: 0, w: 0.5, h: 0.5 });
-    approxRect(G.compassPlacement('ne', opts).frac, { x: 0.5, y: 0, w: 0.5, h: 0.5 });
-    approxRect(G.compassPlacement('sw', opts).frac, { x: 0, y: 0.5, w: 0.5, h: 0.5 });
-    approxRect(G.compassPlacement('se', opts).frac, { x: 0.5, y: 0.5, w: 0.5, h: 0.5 });
-    approxRect(G.compassPlacement('se0', opts).frac, { x: 2 / 3, y: 0.5, w: 1 / 3, h: 0.5 });
-    approxRect(G.compassPlacement('nw2', opts).frac, { x: 0, y: 0, w: 2 / 3, h: 0.5 });
-});
-
-test('compassPlacement: every produced fraction is valid', () => {
-    for (const rs of [[10], [90], [25, 50, 75, 90]])
-        for (const k of ['e', 'w', 'ne', 'nw', 'se', 'sw'])
-            for (let j = 0; j < rs.length; ++j)
-                assert.ok(G.validFrac(G.compassPlacement(k + j, { rings: rs, slots, cw: 70, ch: 75 }).frac), k + j + ' ' + rs);
-});
-
-test('compassPlacement: hub/n/s slot types', () => {
-    const o = t => ({ rings: rings3, slots: { c: t, n: t, s: t }, cw: 70, ch: 75 });
-    const want = {
-        maximize: [true, { x: 0, y: 0, w: 1, h: 1 }],
-        fill: [false, { x: 0, y: 0, w: 1, h: 1 }],
-        top: [false, { x: 0, y: 0, w: 1, h: 0.5 }],
-        bottom: [false, { x: 0, y: 0.5, w: 1, h: 0.5 }],
-        centered: [false, { x: 0.15, y: 0.125, w: 0.7, h: 0.75 }]
-    };
-    for (const k of ['c', 'n', 's'])
-        assert.deepEqual(G.compassPlacement(k, o('natural')), { max: false, natural: true, frac: null }, k);
-    for (const k of ['c', 'n', 's']) {
-        for (const [type, [max, frac]] of Object.entries(want)) {
-            const p = G.compassPlacement(k, o(type));
-            assert.equal(p.max, max, `${k} ${type}`);
-            approxRect(p.frac, frac, 1e-9, `${k} ${type}`);
-        }
-    }
-});
-
-test('slot types and defaults match main.xml', () => {
-    const xml = fs.readFileSync(path.join(PKG, 'config', 'main.xml'), 'utf8');
-    for (const [entry, slot] of [['compassCenter', 'c'], ['compassNorth', 'n'], ['compassSouth', 's']]) {
-        const block = xml.match(new RegExp(`<entry name="${entry}"[\\s\\S]*?</entry>`))[0];
-        assert.deepEqual([...block.matchAll(/<choice name="(\w+)"/g)].map(m => m[1]), G.SLOT_TYPES, entry);
-        assert.equal(block.match(/<default>(\w+)<\/default>/)[1], G.DEFAULT_SLOTS[slot], entry);
-    }
-});
-
-// ---- rings parsing ---------------------------------------------------------
-
-test('parseRings: empty input gives defaults without error', () => {
-    for (const t of ['', '   ', ',', ' , , ']) {
-        const r = G.parseRings(t);
-        assert.deepEqual(r.rings, [33, 50, 67], JSON.stringify(t));
-        assert.equal(r.error, '');
-    }
-});
-
-test('parseRings: sort, dedupe, % suffix, rounding', () => {
-    assert.deepEqual(G.parseRings('50, 25, 75').rings, [25, 50, 75]);
-    assert.deepEqual(G.parseRings('33,33,50,50').rings, [33, 50]);
-    assert.deepEqual(G.parseRings('50%').rings, [50]);
-    assert.deepEqual(G.parseRings('33.4, 66.6').rings, [33, 67]);
-});
-
-test('parseRings: clamps to 10-90', () => {
-    assert.deepEqual(G.parseRings('5, 95').rings, [10, 90]);
-    assert.deepEqual(G.parseRings('0, 3, 100, 99').rings, [10, 90]);
-});
-
-test('parseRings: invalid input falls back to defaults with an error', () => {
-    for (const t of ['abc', '50, x', '-5', '1e2', '50;60']) {
-        const r = G.parseRings(t);
-        assert.deepEqual(r.rings, [33, 50, 67], t);
-        assert.match(r.error, /not a number/, t);
-    }
-    assert.match(G.parseRings('10, 20, 30, 40, 50').error, /at most 4/);
-    assert.deepEqual(G.parseRings('10, 20, 30, 40').rings, [10, 20, 30, 40], 'four is allowed');
-});
-
-test('ringFrac / ringSymbol', () => {
-    approx(G.ringFrac(33), 1 / 3);
-    approx(G.ringFrac(40), 0.4);
-    assert.equal(G.ringSymbol(33), '⅓');
-    assert.equal(G.ringSymbol(40), '40%');
-});
-
-// ---- rectangles ------------------------------------------------------------
-
-test('toAbs / toFrac round trip', () => {
+test('toAbs / toFrac round trip and clamping inside area', () => {
     const area = { x: 100, y: 50, width: 1000, height: 800 };
     const f = { x: 0.25, y: 0.5, w: 0.5, h: 0.25 };
     const r = G.toAbs(f, area);
     assert.deepEqual(r, { x: 350, y: 450, width: 500, height: 200 });
     approxRect(G.toFrac(r, area), f);
+
+    const clamped = G.toAbs({ x: -0.04, y: 0.9, w: 0.5, h: 0.2 }, area);
+    assert.equal(clamped.x, 100);
+    assert.equal(clamped.y + clamped.height, 850);
 });
 
-test('defaults: own size at the hub, fill north, centered south', () => {
-    assert.deepEqual(G.DEFAULT_SLOTS, { c: 'natural', n: 'fill', s: 'centered' });
-});
-
-test('naturalFrac: centered, capped at the whole area', () => {
-    const area = { x: 0, y: 0, width: 1000, height: 800 };
-    approxRect(G.naturalFrac({ width: 500, height: 400 }, area), { x: 0.25, y: 0.25, w: 0.5, h: 0.5 });
-    approxRect(G.naturalFrac({ width: 1500, height: 200 }, area), { x: 0, y: 0.375, w: 1, h: 0.25 });
-    assert.ok(G.validFrac(G.naturalFrac({ width: 4000, height: 4000 }, area)));
-});
-
-test('sameRect tolerance', () => {
-    const r = { x: 10, y: 20, width: 300, height: 200 };
-    assert.ok(G.sameRect(r, { x: 11, y: 19, width: 300, height: 201 }));
-    assert.ok(!G.sameRect(r, { x: 13, y: 20, width: 300, height: 200 }));
-});
-
-test('validFrac', () => {
+test('validFrac and sameRect', () => {
     assert.ok(G.validFrac({ x: 0, y: 0, w: 1, h: 1 }));
+    assert.ok(G.validFrac({ x: -0.01, y: 0, w: 0.5, h: 0.5 }));
     assert.ok(!G.validFrac({ x: 0.5, y: 0, w: 0.6, h: 1 }));
     assert.ok(!G.validFrac({ x: 0, y: 0, w: 0, h: 1 }));
     assert.ok(!G.validFrac(undefined));
-});
 
-test('paddedRect: full padding at screen edges, half between tiles', () => {
-    const a = { x: 0, y: 0, width: 1000, height: 800 };
-    assert.deepEqual(G.paddedRect({ x: 0, y: 0, w: 1, h: 1 }, a, 10), { x: 10, y: 10, width: 980, height: 780 });
-    assert.deepEqual(G.paddedRect({ x: 0, y: 0, w: 0.5, h: 1 }, a, 10), { x: 10, y: 10, width: 485, height: 780 });
-    assert.deepEqual(G.paddedRect({ x: 0.5, y: 0.5, w: 0.5, h: 0.5 }, a, 10), { x: 505, y: 405, width: 485, height: 385 });
+    const r = { x: 10, y: 20, width: 300, height: 200 };
+    assert.ok(G.sameRect(r, { x: 12, y: 18, width: 300, height: 202 }));
+    assert.ok(!G.sameRect(r, { x: 13, y: 20, width: 300, height: 200 }));
 });
 
 test('pt / arcPath / rad / dist helpers', () => {
@@ -269,10 +146,38 @@ test('pt / arcPath / rad / dist helpers', () => {
     assert.match(G.arcPath(0, Math.PI / 2, 10, 20), /^M20\.00 0\.00A20 20 0 0 1 0\.00 20\.00L0\.00 10\.00A10 10 0 0 0 10\.00 0\.00Z$/);
 });
 
-// ---- docs ------------------------------------------------------------------
+test('main.xml compassSize choices match COMPASS_SIZES', () => {
+    const xml = fs.readFileSync(path.join(PKG, 'config', 'main.xml'), 'utf8');
+    const block = xml.match(/<entry name="compassSize"[\s\S]*?<\/entry>/)[0];
+    assert.deepEqual([...block.matchAll(/<choice name="(\w+)"/g)].map(m => m[1]), Object.keys(G.COMPASS_SIZES));
+});
 
 test('docs/geometry.js is generated from the current geometry.js', () => {
     const { build } = require(path.join(__dirname, '..', 'tools', 'docs-geometry.js'));
     assert.equal(fs.readFileSync(path.join(__dirname, '..', 'docs', 'geometry.js'), 'utf8'), build(),
         'run: node tools/docs-geometry.js');
+});
+
+test('main.xml and config.ui are well-formed XML', () => {
+    function assertWellFormedXml(file) {
+        const raw = fs.readFileSync(file, 'utf8')
+            .replace(/<\?[\s\S]*?\?>/g, '')
+            .replace(/<!--[\s\S]*?-->/g, '');
+        const stack = [];
+        for (const m of raw.matchAll(/<(\/?)([A-Za-z_][\w:.-]*)([^>]*?)(\/?)>/g)) {
+            const [, close, tag, , selfClose] = m;
+            if (close && selfClose)
+                throw new Error(`${file}: invalid tag </${tag}/>`);
+            if (close) {
+                const top = stack.pop();
+                assert.equal(top, tag, `${file}: mismatched </${tag}> (expected </${top || 'EOF'}>)`);
+            } else if (!selfClose) {
+                stack.push(tag);
+            }
+        }
+        assert.deepEqual(stack, [], `${file}: unclosed tags ${stack.join(', ')}`);
+        assert.equal(raw.replace(/<[^>]+>/g, '').search(/[<>]/), -1, `${file}: stray angle bracket in text`);
+    }
+    assertWellFormedXml(path.join(PKG, 'config', 'main.xml'));
+    assertWellFormedXml(path.join(PKG, 'ui', 'config.ui'));
 });

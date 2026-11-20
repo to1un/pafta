@@ -2,131 +2,23 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 .pragma library
 
-// Placements are fractions {x, y, w, h} of the output's MaximizeArea, the same
-// reference KWin uses for Tile.relativeGeometry (kwin src/tiles/tile.cpp:153-160).
-
-// Compass bezel diameters (px) per compassSize.
-var COMPASS_SIZES = { small: 210, medium: 260, large: 320 };
-// Sector centers in degrees, 0° = east, clockwise (screen y points down). Four 90° sectors,
-// or with compassCorners ("quarters" / "rings") eight equal 45° ones.
+var COMPASS_SIZES = { small: 180, medium: 220, large: 260 };
 var COMPASS_SECTORS = [["e", 0], ["s", 90], ["w", 180], ["n", 270]];
-var COMPASS_SECTORS_CORNERS = [["e", 0], ["se", 45], ["s", 90], ["sw", 135], ["w", 180], ["nw", 225], ["n", 270], ["ne", 315]];
-// Choices of compassCenter / compassNorth / compassSouth, in main.xml order.
-var SLOT_TYPES = ["natural", "centered", "fill", "maximize", "top", "bottom", "none"];
-var DEFAULT_SLOTS = { c: "natural", n: "fill", s: "centered" };
-var DEFAULT_RINGS = [33, 50, 67];
-var FRACTIONS = { 25: ["¼", 1 / 4], 33: ["⅓", 1 / 3], 50: ["½", 1 / 2], 67: ["⅔", 2 / 3], 75: ["¾", 3 / 4] };
+var DEFAULT_LAYOUT = { split: 60, outerX: 16, outerY: 10, innerGap: 8, centerW: 52, centerH: 72 };
+var TOP_TRIGGER_PX = 36;
+
+function clamp(v, lo, hi) {
+    return Math.min(hi, Math.max(lo, v));
+}
 
 function near(a, b, eps) {
     return Math.abs(a - b) <= (eps === undefined ? 0.01 : eps);
 }
 
-function validFrac(z) {
-    return z && [z.x, z.y, z.w, z.h].every(function (v) { return typeof v === "number" && isFinite(v); })
-        && z.x >= 0 && z.y >= 0 && z.w > 0 && z.h > 0 && z.x + z.w <= 1.0001 && z.y + z.h <= 1.0001;
+function rad(d) {
+    return d * Math.PI / 180;
 }
 
-function toAbs(f, area) {
-    return { x: area.x + f.x * area.width, y: area.y + f.y * area.height, width: f.w * area.width, height: f.h * area.height };
-}
-
-function toFrac(r, area) {
-    return { x: (r.x - area.x) / area.width, y: (r.y - area.y) / area.height, w: r.width / area.width, h: r.height / area.height };
-}
-
-function sameRect(a, b, eps) {
-    eps = eps === undefined ? 1 : eps;
-    return Math.abs(a.x - b.x) <= eps && Math.abs(a.y - b.y) <= eps
-        && Math.abs(a.width - b.width) <= eps && Math.abs(a.height - b.height) <= eps;
-}
-
-// Compass radii (px): hub R0, sectors up to R3, bezel (letters, ticks) up to RB; `corners` is the
-// compassCorners choice: "off" four sectors, "quarters" whole diagonals, "rings" ringed diagonals.
-// East/west (and ringed diagonals) hold width rings, inner = narrowest.
-function compassGeometry(size, corners) {
-    var RB = (COMPASS_SIZES[size] || COMPASS_SIZES.medium) / 2, on = corners === "quarters" || corners === "rings";
-    return { R0: Math.round(RB * 0.16), R3: RB - 20, RB: RB, sectors: on ? COMPASS_SECTORS_CORNERS : COMPASS_SECTORS, cornerRings: corners === "rings" };
-}
-
-// Compass: "" none, "c" hub, "n"/"s" slots, "ne".."sw" quarters, "e0".."w3" / "ne0".."sw3" rings.
-// Past the bezel (+slack) nothing is picked.
-function compassHit(center, p, rings, slots, C) {
-    var dx = p.x - center.x, dy = p.y - center.y, r = Math.sqrt(dx * dx + dy * dy);
-    if (r < C.R0)
-        return r < C.R0 - 3 && slots.c !== "none" ? "c" : "";
-    if (r > C.RB + 40)
-        return "";
-    var a = (Math.atan2(dy, dx) * 180 / Math.PI + 360) % 360;
-    var dir = C.sectors[Math.round(a / (360 / C.sectors.length)) % C.sectors.length][0];
-    if (dir === "n" || dir === "s")
-        return slots[dir] !== "none" ? dir : "";
-    if (dir.length === 2 && !C.cornerRings)
-        return dir;
-    return dir + Math.min(rings - 1, Math.floor((r - C.R0) * rings / (C.R3 - C.R0)));
-}
-
-function ringFrac(percent) {
-    return FRACTIONS[percent] ? FRACTIONS[percent][1] : percent / 100;
-}
-
-function ringSymbol(percent) {
-    return FRACTIONS[percent] ? FRACTIONS[percent][0] : percent + "%";
-}
-
-// "50, 25, 75" -> { rings: [25, 50, 75], error }: 1-4 percentages, clamped to 10-90,
-// deduplicated, ascending. Empty or invalid input gives the defaults.
-function parseRings(text) {
-    var parts = String(text).split(",").map(function (t) { return t.trim().replace(/%$/, ""); })
-        .filter(function (t) { return t.length > 0; });
-    if (parts.length === 0)
-        return { rings: DEFAULT_RINGS, error: "" };
-    var out = [];
-    for (var i = 0; i < parts.length; ++i) {
-        if (!/^\d+(\.\d+)?$/.test(parts[i]))
-            return { rings: DEFAULT_RINGS, error: "not a number: '" + parts[i] + "'" };
-        var v = Math.min(90, Math.max(10, Math.round(Number(parts[i]))));
-        if (out.indexOf(v) < 0)
-            out.push(v);
-    }
-    if (out.length > 4)
-        return { rings: DEFAULT_RINGS, error: "at most 4 values" };
-    return { rings: out.sort(function (a, b) { return a - b; }), error: "" };
-}
-
-// { max, natural, frac } for a compass key; opts: { rings, slots, cw, ch } (percentages).
-// "natural" has no fraction: the window's own size, centered (see naturalFrac).
-// Diagonals are corner quarters, half the height: half the width, or the ring's width.
-function compassPlacement(key, opts) {
-    var side = key.replace(/\d+$/, "");
-    if (side !== key || side.length === 2) {
-        var w = side === key ? 0.5 : ringFrac(opts.rings[Number(key.slice(side.length))]), x = side.slice(-1) === "w" ? 0 : 1 - w;
-        if (side.length === 2)
-            return { max: false, frac: { x: x, y: side.charAt(0) === "s" ? 0.5 : 0, w: w, h: 0.5 } };
-        return { max: false, frac: { x: x, y: 0, w: w, h: 1 } };
-    }
-    switch (opts.slots[key]) {
-    case "natural":
-        return { max: false, natural: true, frac: null };
-    case "maximize":
-        return { max: true, frac: { x: 0, y: 0, w: 1, h: 1 } };
-    case "fill":
-        return { max: false, frac: { x: 0, y: 0, w: 1, h: 1 } };
-    case "top":
-        return { max: false, frac: { x: 0, y: 0, w: 1, h: 0.5 } };
-    case "bottom":
-        return { max: false, frac: { x: 0, y: 0.5, w: 1, h: 0.5 } };
-    }
-    var cw = opts.cw / 100, ch = opts.ch / 100;
-    return { max: false, frac: { x: (1 - cw) / 2, y: (1 - ch) / 2, w: cw, h: ch } };
-}
-
-// A window of `size` ({width, height}) centered in `area`, as a fraction; at most the whole area.
-function naturalFrac(size, area) {
-    var w = Math.min(1, size.width / area.width), h = Math.min(1, size.height / area.height);
-    return { x: (1 - w) / 2, y: (1 - h) / 2, w: w, h: h };
-}
-
-// SVG path helpers for the compass (angles in radians, y down).
 function pt(a, r) {
     return (Math.cos(a) * r).toFixed(2) + " " + (Math.sin(a) * r).toFixed(2);
 }
@@ -136,20 +28,133 @@ function arcPath(a0, a1, r0, r1) {
         + "A" + r0 + " " + r0 + " 0 0 0 " + pt(a0, r0) + "Z";
 }
 
-function rad(d) {
-    return d * Math.PI / 180;
-}
-
 function dist(a, b) {
     var dx = a.x - b.x, dy = a.y - b.y;
     return Math.sqrt(dx * dx + dy * dy);
 }
 
-// Absolute window geometry for a fraction, with KWin-like tile padding
-// (full against screen edges, half between tiles; kwin src/tiles/tile.cpp:171-182).
-function paddedRect(f, area, padding) {
-    var r = toAbs(f, area);
-    var l = f.x > 0.001 ? padding / 2 : padding, t = f.y > 0.001 ? padding / 2 : padding;
-    var rr = f.x + f.w < 0.999 ? padding / 2 : padding, b = f.y + f.h < 0.999 ? padding / 2 : padding;
-    return { x: Math.round(r.x + l), y: Math.round(r.y + t), width: Math.round(r.width - l - rr), height: Math.round(r.height - t - b) };
+function validFrac(z) {
+    return !!(z && typeof z.x === "number" && isFinite(z.x)
+        && typeof z.y === "number" && isFinite(z.y)
+        && typeof z.w === "number" && isFinite(z.w)
+        && typeof z.h === "number" && isFinite(z.h)
+        && z.w > 0.01 && z.h > 0.01
+        && z.x >= -0.05 && z.y >= -0.05
+        && z.x + z.w <= 1.05 && z.y + z.h <= 1.05);
+}
+
+function toAbs(f, area) {
+    var minW = Math.min(120, area.width);
+    var minH = Math.min(80, area.height);
+    var w = clamp(Math.round(f.w * area.width), minW, area.width);
+    var h = clamp(Math.round(f.h * area.height), minH, area.height);
+    var x = clamp(Math.round(area.x + f.x * area.width), area.x, area.x + area.width - w);
+    var y = clamp(Math.round(area.y + f.y * area.height), area.y, area.y + area.height - h);
+    return { x: x, y: y, width: w, height: h };
+}
+
+function toFrac(r, area) {
+    if (!area || area.width <= 0 || area.height <= 0)
+        return null;
+    return {
+        x: (r.x - area.x) / area.width,
+        y: (r.y - area.y) / area.height,
+        w: r.width / area.width,
+        h: r.height / area.height
+    };
+}
+
+function sameRect(a, b, eps) {
+    eps = eps === undefined ? 2 : eps;
+    return !!a && !!b
+        && Math.abs(a.x - b.x) <= eps
+        && Math.abs(a.y - b.y) <= eps
+        && Math.abs(a.width - b.width) <= eps
+        && Math.abs(a.height - b.height) <= eps;
+}
+
+function normalizeLayout(raw) {
+    var r = raw || {};
+    var num = function (key, lo, hi, def) {
+        var v = r[key];
+        if (v === undefined || v === null || v === "")
+            return def;
+        var n = Number(v);
+        return isFinite(n) ? clamp(Math.round(n), lo, hi) : def;
+    };
+    return {
+        split: num("split", 25, 75, DEFAULT_LAYOUT.split),
+        outerX: num("outerX", 0, 80, DEFAULT_LAYOUT.outerX),
+        outerY: num("outerY", 0, 80, DEFAULT_LAYOUT.outerY),
+        innerGap: num("innerGap", 0, 60, DEFAULT_LAYOUT.innerGap),
+        centerW: num("centerW", 20, 95, DEFAULT_LAYOUT.centerW),
+        centerH: num("centerH", 20, 95, DEFAULT_LAYOUT.centerH)
+    };
+}
+
+function slotRect(slot, area, layout) {
+    var l = normalizeLayout(layout);
+    var availW = Math.max(200, area.width - 2 * l.outerX);
+    var availH = Math.max(140, area.height - 2 * l.outerY);
+    var x0 = Math.round(area.x + l.outerX);
+    var y0 = Math.round(area.y + l.outerY);
+    var leftW = Math.round((availW - l.innerGap) * (l.split / 100));
+
+    switch (slot) {
+    case "fill":
+    case "n":
+        return { x: x0, y: y0, width: Math.round(availW), height: Math.round(availH) };
+    case "left":
+    case "w":
+        return { x: x0, y: y0, width: leftW, height: Math.round(availH) };
+    case "right":
+    case "e": {
+        var rx = x0 + leftW + l.innerGap;
+        return { x: rx, y: y0, width: Math.round(x0 + availW - rx), height: Math.round(availH) };
+    }
+    case "center":
+    case "s": {
+        var cw = Math.round(availW * (l.centerW / 100));
+        var ch = Math.round(availH * (l.centerH / 100));
+        return { x: Math.round(x0 + (availW - cw) / 2), y: Math.round(y0 + (availH - ch) / 2), width: cw, height: ch };
+    }
+    }
+    return null;
+}
+
+function compassGeometry(size) {
+    var RB = (COMPASS_SIZES[size] || COMPASS_SIZES.medium) / 2;
+    return { R0: Math.round(RB * 0.25), R3: RB - 18, RB: RB, sectors: COMPASS_SECTORS };
+}
+
+function inTopTrigger(p, area, triggerPx) {
+    var px = triggerPx === undefined ? TOP_TRIGGER_PX : triggerPx;
+    return !!p && !!area
+        && p.x >= area.x && p.x <= area.x + area.width
+        && p.y >= area.y && p.y <= area.y + px;
+}
+
+function compassCenterAtTop(cursorX, area, geo) {
+    return {
+        x: clamp(Math.round(cursorX), area.x + geo.RB + 16, area.x + area.width - geo.RB - 16),
+        y: area.y + geo.RB + 14
+    };
+}
+
+function compassDismissed(center, p, geo) {
+    return p.y > center.y + geo.RB + 36 || Math.abs(p.x - center.x) > geo.RB + 60;
+}
+
+function compassHit(center, p, geo) {
+    var dx = p.x - center.x, dy = p.y - center.y, r = Math.sqrt(dx * dx + dy * dy);
+    if (r < geo.R0)
+        return "c";
+    if (r > geo.RB + 40)
+        return "";
+    var deg = (Math.atan2(dy, dx) * 180 / Math.PI + 360) % 360;
+    return ["e", "s", "w", "n"][Math.round(deg / 90) % 4];
+}
+
+function slotFromCompassKey(key) {
+    return { w: "left", e: "right", n: "fill", s: "center" }[key] || "";
 }

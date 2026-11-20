@@ -1,0 +1,6 @@
+# Local design previews, archives, and agent/editor state
+design/
+archive/
+research/
+.claude/
+*.bak

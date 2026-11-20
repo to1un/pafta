@@ -9,27 +9,26 @@ Item {
     id: root
 
     readonly property var defaults: ({
-        dwellMs: 250,
+        split: 60,
+        outerX: 16,
+        outerY: 10,
+        innerGap: 8,
+        centerWidth: 52,
+        centerHeight: 72,
         compassSize: "medium",
-        compassCenter: "natural",
-        compassNorth: "fill",
-        compassSouth: "centered",
-        compassRings: "33, 50, 67",
-        compassCorners: "quarters",
-        centeredWidth: 70,
-        centeredHeight: 75,
         remember: true,
         restoreMaximized: true,
-        exceptions: "org.kde.kcalc\nplasmashell\nkrunner\norg.kde.spectacle",
+        exceptions: "org.kde.kcalc\nplasmashell\nkrunner\norg.kde.spectacle\norg.freedesktop.impl.portal.desktop.kde\norg.kde.polkit-kde-authentication-agent-1\norg.kde.plasma.emojier",
         debug: false
     })
 
-    property var cfg: ({ exceptions: [] })
+    property var cfg: ({ exceptions: [], layout: G.DEFAULT_LAYOUT, geo: G.compassGeometry("medium") })
     property var hooks: ({})
-    property var records: ({})   // internalId -> { frac } | { max }
-    property var memory: ({})    // resourceClass -> record
-    property var naturals: ({})  // resourceClass -> { width, height }: own size
+    property var records: ({})          // internalId -> { max, frac, output, ts }
+    property var memory: ({})           // resourceClass -> { max, frac, output, ts }
+    property var pendingRestores: ([])  // active multi-step Wayland restore jobs
     property var drag: null
+    property string lastSavedJson: ""
 
     function log(msg) {
         if (cfg.debug)
@@ -44,149 +43,330 @@ Item {
         return { x: r.x, y: r.y, width: r.width, height: r.height };
     }
 
+    function qrect(r) {
+        return Qt.rect(Math.round(r.x), Math.round(r.y), Math.round(r.width), Math.round(r.height));
+    }
+
     function idOf(w) {
         return String(w.internalId);
     }
 
-    function tileFrac(tile) {
-        const g = tile.relativeGeometry;
-        return { x: g.x, y: g.y, w: g.width, h: g.height };
-    }
-
     // ---- config -----------------------------------------------------------
 
-    // Read from kwinrc on every drag: KWin.readConfig only sees a saved dialog after a KWin
-    // reconfigure, which the script config dialog does not trigger.
+    // Read from kwinrc on every drag/shortcut: KWin.readConfig only sees a saved dialog after
+    // a KWin reconfigure, which the script config dialog does not trigger.
     function loadConfig() {
         kwinrc.sync();
         const c = {};
         for (const k in defaults) {
             const v = kwinrc.value(k);
-            c[k] = v === undefined ? defaults[k] : String(v); // a comma list arrives as a list
+            c[k] = v === undefined ? defaults[k] : String(v);
         }
-        // Enums arrive as choice indices from the config dialog, or as names when written by hand.
         const choice = (k, list) => {
             const v = /^\d$/.test(String(c[k])) ? list[Number(c[k])] : String(c[k]);
             return list.indexOf(v) >= 0 ? v : defaults[k];
         };
         const flag = k => c[k] === true || c[k] === "true";
-        const percent = k => Math.min(100, Math.max(10, Number(c[k]) || defaults[k]));
-        const dwell = Number(c.dwellMs); // 0: open as soon as the drag starts
-        c.dwellMs = !isFinite(dwell) || dwell < 0 ? defaults.dwellMs : dwell === 0 ? 0 : Math.max(100, dwell);
+
         c.compassSize = choice("compassSize", ["small", "medium", "large"]);
-        c.compassCorners = choice("compassCorners", ["off", "quarters", "rings"]);
         c.remember = flag("remember");
         c.restoreMaximized = flag("restoreMaximized");
         c.debug = flag("debug");
-        const rings = G.parseRings(c.compassRings);
-        if (rings.error)
-            warn("invalid compassRings '" + c.compassRings + "', using defaults: " + rings.error);
-        c.compass = {
-            rings: rings.rings,
-            slots: { c: choice("compassCenter", G.SLOT_TYPES), n: choice("compassNorth", G.SLOT_TYPES), s: choice("compassSouth", G.SLOT_TYPES) },
-            cw: percent("centeredWidth"),
-            ch: percent("centeredHeight"),
-            geo: G.compassGeometry(c.compassSize, c.compassCorners)
-        };
+        c.layout = G.normalizeLayout({
+            split: c.split,
+            outerX: c.outerX,
+            outerY: c.outerY,
+            innerGap: c.innerGap,
+            centerW: c.centerWidth,
+            centerH: c.centerHeight
+        });
+        c.geo = G.compassGeometry(c.compassSize);
         c.exceptions = String(c.exceptions).split(/[\n,]/).map(s => s.trim()).filter(s => s.length > 0);
         cfg = c;
     }
 
-    // ---- placement ----------------------------------------------------------
+    // ---- helpers ----------------------------------------------------------
 
     function areaOf(output, desktop) {
         return rect(Workspace.clientArea(KWin.MaximizeArea, output, desktop));
     }
 
+    function desktopOf(w) {
+        return (w && w.desktops && w.desktops.length > 0) ? w.desktops[0] : Workspace.currentDesktopForScreen(w ? w.output : Workspace.activeScreen);
+    }
+
+    function hookOf(w) {
+        return w ? (hooks[idOf(w)] || null) : null;
+    }
+
     function manageable(w) {
-        return !!w && w.normalWindow && !w.transient && !w.specialWindow && !w.popupWindow && !w.deleted
-            && w.moveable && w.resizeable && cfg.exceptions.indexOf(String(w.resourceClass)) < 0;
+        return !!w && w.normalWindow && !w.modal && !w.transient && !w.specialWindow && !w.popupWindow && !w.skipTaskbar
+            && !w.deleted && w.moveable && w.resizeable && cfg.exceptions.indexOf(String(w.resourceClass)) < 0;
     }
 
-    function remember(w, rec) {
-        records[idOf(w)] = rec;
+    function outputNamed(name) {
+        if (!name)
+            return null;
+        return Workspace.screens.find(o => o.name === name) || null;
     }
 
-    // A plain geometry, never a tile: a window in a tile resizes with the tile, not on its own.
-    function placeFrac(w, output, desktop, frac) {
-        const r = Workspace.rootTile(output, desktop);
-        if (w.tile)
-            w.tile.unmanage(w);
-        w.setMaximize(false, false);
-        setRestore(w, null); // placed here, not where it was before it was maximized
-        const g = G.paddedRect(frac, areaOf(output, desktop), r ? r.padding : 0);
-        w.frameGeometry = Qt.rect(g.x, g.y, g.width, g.height);
-        remember(w, { frac: frac });
+    function hasSibling(w) {
+        const cls = String(w.resourceClass);
+        for (const id in hooks) {
+            const o = hooks[id].window;
+            if (o !== w && !o.deleted && String(o.resourceClass) === cls)
+                return true;
+        }
+        return false;
     }
 
-    // Own size: what the application first opened with, or was last resized to by hand while free.
-    // Kept per application; null when unknown (windows already open when pafta started).
-    function naturalSize(w) {
-        const hook = hooks[idOf(w)];
-        return hook && hook.natural ? hook.natural : null;
-    }
+    // ---- memory & multi-step Wayland restore ------------------------------
 
-    function setNatural(w, size) {
-        const hook = hooks[idOf(w)];
-        if (hook)
-            hook.natural = size;
-        if (w.resourceClass) {
-            naturals[String(w.resourceClass)] = size;
-            state.naturals = JSON.stringify(naturals);
+    function saveMemory() {
+        const json = JSON.stringify(memory);
+        if (json !== lastSavedJson) {
+            state.memory = json;
+            state.sync();
+            lastSavedJson = json;
         }
     }
 
-    // Own size centered, or the centered slot's size while the own size is unknown.
-    function naturalFrac(w, area) {
-        const size = naturalSize(w);
-        return size ? G.naturalFrac(size, area) : G.compassPlacement("c", { slots: { c: "centered" }, cw: cfg.compass.cw, ch: cfg.compass.ch }).frac;
+    function snapshotOf(w) {
+        if (!w || !w.output)
+            return null;
+        if (w.maximizeMode === 3)
+            return { max: true, output: w.output.name, ts: Date.now() };
+        if (w.maximizeMode === 0) {
+            const g = rect(w.frameGeometry);
+            if (g.width <= 10 || g.height <= 10)
+                return null;
+            const area = areaOf(w.output, desktopOf(w));
+            const frac = G.toFrac(g, area);
+            if (!G.validFrac(frac))
+                return null;
+            const relPos = typeof w.output.mapFromGlobal === "function"
+                ? w.output.mapFromGlobal(w.pos || Qt.point(g.x, g.y))
+                : { x: g.x - w.output.geometry.x, y: g.y - w.output.geometry.y };
+            return {
+                max: false,
+                frac: frac,
+                rel: { x: Math.round(relPos.x), y: Math.round(relPos.y), width: Math.round(g.width), height: Math.round(g.height) },
+                areaW: Math.round(area.width),
+                areaH: Math.round(area.height),
+                output: w.output.name,
+                ts: Date.now()
+            };
+        }
+        return null;
     }
 
-    function placeNatural(w, output, desktop) {
+    function record(w, flushNow) {
+        const hook = hookOf(w);
+        if (!hook || !manageable(w) || hook.restoring)
+            return;
+        const rec = snapshotOf(w);
+        if (!rec)
+            return;
+        records[idOf(w)] = rec;
+        if (cfg.remember && w.resourceClass) {
+            memory[String(w.resourceClass)] = rec;
+            if (flushNow)
+                saveMemory();
+            else
+                saveTimer.restart();
+        }
+    }
+
+    function liveBackup() {
+        for (const id in hooks) {
+            const hook = hooks[id];
+            const w = hook.window;
+            if (!w || w.deleted || hook.restoring || (drag && drag.window === w))
+                continue;
+            if (manageable(w))
+                record(w, false);
+        }
+        saveMemory();
+    }
+
+    function removePendingRestore(id) {
+        for (let i = pendingRestores.length - 1; i >= 0; --i) {
+            if (pendingRestores[i].id === id)
+                pendingRestores.splice(i, 1);
+        }
+        if (pendingRestores.length === 0)
+            restoreTimer.stop();
+    }
+
+    function cancelRestore(w) {
+        if (!w)
+            return;
+        const id = idOf(w), hook = hooks[id];
+        removePendingRestore(id);
+        if (hook) {
+            hook.restoring = false;
+            hook.userTouched = true;
+        }
+    }
+
+    function computeRestorePlan(rec, w) {
+        const output = outputNamed(rec.output) || w.output;
+        if (!output)
+            return null;
+        if (rec.max)
+            return { output: output, max: true, rect: null };
+        const area = areaOf(output, Workspace.currentDesktopForScreen(output));
+        if (rec.rel && rec.rel.width > 10 && rec.rel.height > 10
+                && Math.abs(area.width - (rec.areaW || 0)) <= 4
+                && Math.abs(area.height - (rec.areaH || 0)) <= 4) {
+            const gp = typeof output.mapToGlobal === "function"
+                ? output.mapToGlobal(Qt.point(rec.rel.x, rec.rel.y))
+                : { x: output.geometry.x + rec.rel.x, y: output.geometry.y + rec.rel.y };
+            const cw = G.clamp(Math.round(rec.rel.width), Math.min(120, area.width), area.width);
+            const ch = G.clamp(Math.round(rec.rel.height), Math.min(80, area.height), area.height);
+            const cx = G.clamp(Math.round(gp.x), area.x, area.x + area.width - cw);
+            const cy = G.clamp(Math.round(gp.y), area.y, area.y + area.height - ch);
+            return { output: output, max: false, rect: { x: cx, y: cy, width: cw, height: ch } };
+        }
+        if (G.validFrac(rec.frac))
+            return { output: output, max: false, rect: G.toAbs(rec.frac, area) };
+        return null;
+    }
+
+    function applyRestore(w, plan) {
+        if (!w || w.deleted || !plan)
+            return;
+        if (plan.max) {
+            if (plan.output && w.output !== plan.output)
+                Workspace.sendClientToScreen(w, plan.output);
+            if (w.tile)
+                w.tile.unmanage(w);
+            if (w.maximizeMode !== 3)
+                w.setMaximize(true, true);
+        } else if (plan.rect) {
+            if (w.tile)
+                w.tile.unmanage(w);
+            if (w.maximizeMode !== 0)
+                w.setMaximize(false, false);
+            const t = plan.rect;
+            if (w.x !== t.x || w.y !== t.y || w.width !== t.width || w.height !== t.height)
+                w.frameGeometry = Qt.rect(t.x, t.y, t.width, t.height);
+        }
+    }
+
+    function restoreNow(w) {
+        if (!cfg.remember || !w || w.deleted || !manageable(w) || !w.resourceClass)
+            return;
+        const cls = String(w.resourceClass);
+        const rec = memory[cls];
+        const id = idOf(w), hook = hooks[id];
+        if (!rec || !hook || hook.userTouched || hasSibling(w))
+            return;
+        const plan = computeRestorePlan(rec, w);
+        if (!plan)
+            return;
+
+        log("restoring " + cls + " -> " + JSON.stringify(plan));
+        hook.restoring = true;
+        hook.userTouched = false;
+        applyRestore(w, plan);
+        records[id] = rec;
+
+        removePendingRestore(id);
+        const now = Date.now();
+        pendingRestores.push({
+            id: id,
+            window: w,
+            rec: rec,
+            plan: plan,
+            steps: [now + 250, now + 800],
+            stepIdx: 0
+        });
+        if (!restoreTimer.running)
+            restoreTimer.start();
+    }
+
+    function restoreOnAdded(w) {
+        if (!cfg.remember || !w || !w.normalWindow)
+            return;
+        if (w.resourceClass)
+            restoreNow(w);
+        else
+            Qt.callLater(() => restoreNow(w));
+    }
+
+    // ---- placement --------------------------------------------------------
+
+    function placeSlot(w, output, desktop, slot) {
+        if (!w || w.deleted || !manageable(w))
+            return;
+        cancelRestore(w);
+        const area = areaOf(output, desktop);
+        const target = G.slotRect(slot, area, cfg.layout);
+        if (!target)
+            return;
         if (w.tile)
             w.tile.unmanage(w);
         w.setMaximize(false, false);
         setRestore(w, null);
-        const area = areaOf(output, desktop), g = G.toAbs(naturalFrac(w, area), area);
-        w.frameGeometry = Qt.rect(Math.round(g.x), Math.round(g.y), Math.round(g.width), Math.round(g.height));
-        delete records[idOf(w)]; // it opens at its own size anyway
+        w.frameGeometry = qrect(target);
+        record(w, false);
+
+        // Guard against KWin's top electric-border maximize firing on the same event turn.
+        Qt.callLater(() => {
+            if (w.deleted || !hooks[idOf(w)])
+                return;
+            if (w.maximizeMode !== 0 || !G.sameRect(rect(w.frameGeometry), target, 2)) {
+                if (w.tile)
+                    w.tile.unmanage(w);
+                w.setMaximize(false, false);
+                w.frameGeometry = qrect(target);
+                record(w, false);
+            }
+        });
     }
 
-    // `start`: where a dropped window was when the drag began, to un-maximize it to.
-    function placeKey(w, output, desktop, key, start) {
-        const p = G.compassPlacement(key, cfg.compass);
-        if (p.natural) {
-            placeNatural(w, output, desktop);
-        } else if (p.max) {
-            if (w.tile)
-                w.tile.unmanage(w);
-            w.setMaximize(true, true);
-            if (start)
-                setRestore(w, start);
-            remember(w, { max: true });
-        } else {
-            placeFrac(w, output, desktop, p.frac);
-        }
+    function placeActive(slot) {
+        loadConfig();
+        const w = Workspace.activeWindow;
+        if (!w || !manageable(w))
+            return;
+        const output = w.output || Workspace.activeScreen;
+        placeSlot(w, output, desktopOf(w), slot);
     }
 
-    // ---- drag -----------------------------------------------------------------
+    // ---- drag (Concept A: Top-Edge Compass) -------------------------------
 
     function moveResizeStarted(w) {
-        const hook = hooks[idOf(w)];
-        if (hook)
-            hook.resizing = w.resize;
+        cancelRestore(w);
         if (!w.move || !manageable(w))
             return;
         loadConfig();
         const p = Workspace.cursorPos;
+        const output = Workspace.screenAt(Qt.point(p.x, p.y)) || w.output;
+        const desktop = Workspace.currentDesktopForScreen(output);
+        const area = areaOf(output, desktop);
         drag = {
-            window: w, startMax: w.maximizeMode, start: where(w),
-            open: false, done: false, hot: "", sig: "",
-            anchor: { x: p.x, y: p.y }, anchorTime: Date.now(), center: null,
-            output: null, desktop: null, area: null, outGeo: null
+            window: w,
+            startMax: w.maximizeMode,
+            start: where(w),
+            open: false,
+            hot: "",
+            sig: "",
+            center: null,
+            output: output,
+            desktop: desktop,
+            area: area
         };
         overlay.vs = rect(Workspace.virtualScreenGeometry);
-        overlay.compass = cfg.compass;
+        overlay.split = cfg.layout.split;
+        overlay.geo = cfg.geo;
+        overlay.screenArea = area;
+        overlay.dragging = true;
+        overlay.compassOpen = false;
+        overlay.hot = "";
+        overlay.preview = null;
+        overlay.visible = true;
         poll();
         pollTimer.start();
         log("move start: " + w.resourceClass);
@@ -196,7 +376,7 @@ Item {
         const d = drag;
         if (!d)
             return;
-        const c = Workspace.cursorPos, p = { x: c.x, y: c.y }, now = Date.now();
+        const c = Workspace.cursorPos, p = { x: c.x, y: c.y };
         const output = Workspace.screenAt(Qt.point(p.x, p.y));
         if (!output)
             return;
@@ -204,105 +384,91 @@ Item {
             d.output = output;
             d.desktop = Workspace.currentDesktopForScreen(output);
             d.area = areaOf(output, d.desktop);
-            d.outGeo = rect(output.geometry);
+            if (d.open) {
+                d.open = false;
+                d.hot = "";
+            }
         }
-
-        const moved = G.dist(p, d.anchor) > 4, immediate = cfg.dwellMs === 0;
-        if (moved) {
-            d.anchor = p;
-            d.anchorTime = now;
-        }
-        if (!d.open && !d.done && (immediate || (!moved && now - d.anchorTime >= cfg.dwellMs))) {
-            const m = cfg.compass.geo.RB + 30, o = d.outGeo; // room for the compass label below
-            d.center = {
-                x: Math.min(Math.max(p.x, o.x + m), o.x + o.width - m),
-                y: Math.min(Math.max(p.y, o.y + m), o.y + o.height - m)
-            };
+        if (!d.open && G.inTopTrigger(p, d.area, G.TOP_TRIGGER_PX)) {
+            d.center = G.compassCenterAtTop(p.x, d.area, cfg.geo);
             d.open = true;
-        }
-        // Moving well away closes it; drop anywhere then and the window stays where it is.
-        if (d.open && G.dist(p, d.center) > 2.5 * cfg.compass.geo.RB) {
+            log("compass opened at " + d.center.x + "," + d.center.y);
+        } else if (d.open && G.compassDismissed(d.center, p, cfg.geo)) {
             d.open = false;
-            d.done = immediate; // opened without a pause: once per drag, so the window can be dropped freely
-            d.anchor = p;
-            d.anchorTime = now;
+            d.hot = "";
+            log("compass dismissed");
         }
-
-        d.hot = d.open ? G.compassHit(d.center, p, cfg.compass.rings.length, cfg.compass.slots, cfg.compass.geo) : "";
+        d.hot = d.open ? G.compassHit(d.center, p, cfg.geo) : "";
         render(d);
     }
 
     function render(d) {
-        const sig = d.open + "|" + d.hot + "|" + (d.output ? d.output.name : "");
+        const cx = d.center ? d.center.x : 0;
+        const cy = d.center ? d.center.y : 0;
+        const sig = d.open + "|" + d.hot + "|" + cx + "," + cy + "|" + (d.output ? d.output.name : "");
         if (sig === d.sig)
             return;
         d.sig = sig;
+        overlay.screenArea = d.area;
+        overlay.dragging = true;
+        overlay.compassOpen = d.open;
         overlay.center = d.center || { x: 0, y: 0 };
         overlay.hot = d.hot;
-        const p = d.hot ? G.compassPlacement(d.hot, cfg.compass) : null;
-        overlay.preview = !p ? null : G.toAbs(p.natural ? naturalFrac(d.window, d.area) : p.frac, d.area);
-        overlay.visible = d.open;
+        const slot = G.slotFromCompassKey(d.hot);
+        overlay.preview = slot ? G.slotRect(slot, d.area, cfg.layout) : null;
     }
 
     function endDrag() {
         pollTimer.stop();
+        overlay.dragging = false;
+        overlay.compassOpen = false;
+        overlay.preview = null;
+        overlay.hot = "";
         overlay.visible = false;
         drag = null;
     }
 
     function moveResizeFinished(w) {
-        const hook = hooks[idOf(w)];
-        if (hook && hook.resizing) {
-            hook.resizing = false;
-            // Resized by hand while free (not placed by pafta): that is its own size now.
-            if (!w.tile && w.maximizeMode === 0 && !records[idOf(w)] && manageable(w))
-                setNatural(w, { width: w.frameGeometry.width, height: w.frameGeometry.height });
-        }
-        if (!drag || drag.window !== w)
+        const hook = hookOf(w);
+        if (!drag || drag.window !== w) {
+            if (hook && !hook.restoring && manageable(w))
+                record(w, false);
             return;
+        }
         poll();
-        const d = drag, key = d.hot;
+        const d = drag, slot = G.slotFromCompassKey(d.hot);
         endDrag();
-        // Shift-drag / electric borders are applied before this signal (kwin src/window.cpp:1086-1100).
-        if (w.tile) {
-            log("KWin tiled the window natively; keeping it");
-            remember(w, { frac: tileFrac(w.tile) });
-            return;
-        }
-        if (w.maximizeMode !== 0 && d.startMax === 0) {
-            log("KWin maximized the window; keeping it");
-            return;
-        }
-        if (!key) {
-            delete records[idOf(w)];
-            return;
-        }
-        // Esc cancels the move: KWin puts the window back where it started before this signal.
-        if (w.maximizeMode === d.startMax && G.sameRect(rect(w.frameGeometry), d.start.frame)) {
+        // Esc cancels the move: KWin restores the starting geometry before this signal.
+        if (w.maximizeMode === d.startMax && G.sameRect(rect(w.frameGeometry), d.start.frame, 1)) {
             log("move cancelled; leaving the window where it started");
             return;
         }
-        log("drop: " + key);
-        placeKey(w, d.output, d.desktop, key, d.startMax === 0 ? d.start : null);
+        if (slot) {
+            log("drop: " + slot);
+            placeSlot(w, d.output, d.desktop, slot);
+            return;
+        }
+        record(w, false);
     }
 
     function tileChanged(w, tile) {
-        // `tile` notifies asynchronously on Wayland; only positive assignments are recorded.
-        if (tile && manageable(w))
-            remember(w, { frac: tileFrac(tile) });
+        const id = idOf(w), hook = hooks[id];
+        if (hook && hook.restoring)
+            return;
+        Qt.callLater(() => {
+            if (hooks[id] && !hooks[id].restoring && manageable(hooks[id].window))
+                record(hooks[id].window, false);
+        });
     }
 
-    // ---- maximize -------------------------------------------------------------
+    // ---- maximize ---------------------------------------------------------
 
-    // KWin un-maximizes to its geometryRestore (kwin src/xdgshellwindow.cpp:1778-1832): a tiled
-    // window loses its tile and gets its size from before it was tiled, and a window maximized by
-    // a drop returns to where it was dropped. Put it back where it was instead, in its tile if any.
     function where(w) {
         return { tile: w.tile, frame: rect(w.frameGeometry), output: w.output };
     }
 
     function setRestore(w, s) {
-        const hook = hooks[idOf(w)];
+        const hook = hookOf(w);
         if (!hook)
             return;
         const on = !!s && cfg.restoreMaximized;
@@ -311,19 +477,27 @@ Item {
     }
 
     function maximizeAboutToChange(w, mode) {
+        const hook = hookOf(w);
+        if (hook && hook.restoring)
+            return;
         if (w.move || w.resize) {
-            setRestore(w, null); // dragged or resized out of it: KWin places it under the cursor
+            setRestore(w, null);
         } else if (mode !== 0 && w.maximizeMode === 0 && manageable(w)) {
-            // An electric-border maximize runs before interactiveMoveResizeFinished (kwin src/window.cpp:1088-1102).
             setRestore(w, drag && drag.window === w && drag.startMax === 0 ? drag.start : where(w));
         }
     }
 
     function maximizeChanged(w) {
         const id = idOf(w), hook = hooks[id];
-        // Deferred: when tile.manage() un-maximizes a window, w.tile is set only afterwards (kwin src/window.cpp:3844-3856).
+        if (hook && hook.restoring)
+            return;
         if (hook && hook.restore && w.maximizeMode === 0)
             Qt.callLater(() => unmaximized(id));
+        else
+            Qt.callLater(() => {
+                if (hooks[id] && !hooks[id].restoring && manageable(hooks[id].window))
+                    record(hooks[id].window, false);
+            });
     }
 
     function unmaximized(id) {
@@ -336,54 +510,40 @@ Item {
             return;
         if (tile && tile.manage(w)) {
             log("un-maximized back into its tile");
-            return;
+        } else if (!G.sameRect(rect(w.frameGeometry), s.frame, 1)) {
+            w.frameGeometry = qrect(s.frame);
         }
-        if (!G.sameRect(rect(w.frameGeometry), s.frame)) {
-            log("un-maximized to " + JSON.stringify(s.frame) + " instead of " + JSON.stringify(rect(w.frameGeometry)));
-            w.frameGeometry = Qt.rect(s.frame.x, s.frame.y, s.frame.width, s.frame.height);
-        }
+        record(w, false);
     }
 
-    // ---- windows & memory -----------------------------------------------------
+    // ---- windows ----------------------------------------------------------
 
-    // `opened`: the window is new, not one found at startup.
-    function addWindow(w, opened) {
+    function addWindow(w) {
         if (!w || !w.normalWindow || hooks[idOf(w)])
             return;
-        const known = naturals[String(w.resourceClass)];
-        hooks[idOf(w)] = hookComponent.createObject(root, { window: w, handler: root, natural: known || null });
-        // Before a remembered placement is restored (deferred), so this is the size it opened with.
-        if (!known && opened && manageable(w))
-            setNatural(w, { width: w.frameGeometry.width, height: w.frameGeometry.height });
+        hooks[idOf(w)] = hookComponent.createObject(root, { window: w, handler: root });
     }
 
     function windowClosed(w) {
+        const id = idOf(w), hook = hooks[id];
         if (drag && drag.window === w)
             endDrag();
-        const rec = records[idOf(w)];
-        if (cfg.remember && rec && w.resourceClass) {
-            memory[String(w.resourceClass)] = rec;
-            state.memory = JSON.stringify(memory);
-            log("remembered " + w.resourceClass + " -> " + JSON.stringify(rec));
+        removePendingRestore(id);
+        if (hook && !hook.restoring && w.normalWindow && !w.modal && !w.transient && !w.specialWindow && !w.popupWindow
+                && !w.skipTaskbar && w.moveable && w.resizeable && cfg.exceptions.indexOf(String(w.resourceClass)) < 0) {
+            const rec = snapshotOf(w) || records[id];
+            if (rec && cfg.remember && w.resourceClass) {
+                memory[String(w.resourceClass)] = rec;
+                saveMemory();
+                log("remembered on close " + w.resourceClass + " -> " + JSON.stringify(rec));
+            }
         }
-    }
-
-    function restore(w) {
-        const rec = memory[String(w.resourceClass)];
-        if (!rec || w.deleted || !manageable(w))
-            return;
-        log("restoring " + w.resourceClass + " -> " + JSON.stringify(rec));
-        if (rec.max)
-            w.setMaximize(true, true);
-        else if (G.validFrac(rec.frac))
-            placeFrac(w, w.output, Workspace.currentDesktopForScreen(w.output), rec.frac);
     }
 
     Settings {
         id: state
         location: StandardPaths.writableLocation(StandardPaths.GenericDataLocation) + "/pafta/state.ini"
         property string memory: "{}"
-        property string naturals: "{}"
     }
 
     // Read-only: nothing is ever set on it, so it never writes kwinrc back.
@@ -402,22 +562,96 @@ Item {
         id: overlay
     }
 
+    ShortcutHandler {
+        name: "pafta: Fill"
+        text: "pafta: Fill"
+        sequence: "Meta+Up"
+        onActivated: root.placeActive("fill")
+    }
+
+    ShortcutHandler {
+        name: "pafta: Left"
+        text: "pafta: Left"
+        sequence: "Meta+Left"
+        onActivated: root.placeActive("left")
+    }
+
+    ShortcutHandler {
+        name: "pafta: Right"
+        text: "pafta: Right"
+        sequence: "Meta+Right"
+        onActivated: root.placeActive("right")
+    }
+
+    ShortcutHandler {
+        name: "pafta: Center"
+        text: "pafta: Center"
+        sequence: "Meta+Down"
+        onActivated: root.placeActive("center")
+    }
+
     Timer {
         id: pollTimer
-        interval: 30
+        interval: 25
         repeat: true
         onTriggered: root.poll()
+    }
+
+    Timer {
+        id: saveTimer
+        interval: 250
+        onTriggered: root.saveMemory()
+    }
+
+    Timer {
+        id: liveBackupTimer
+        interval: 20000
+        repeat: true
+        running: true
+        onTriggered: root.liveBackup()
+    }
+
+    Timer {
+        id: restoreTimer
+        interval: 50
+        repeat: true
+        onTriggered: {
+            const now = Date.now();
+            for (let i = root.pendingRestores.length - 1; i >= 0; --i) {
+                const job = root.pendingRestores[i];
+                const hook = root.hooks[job.id];
+                const w = job.window;
+                if (!hook || !w || w.deleted || hook.userTouched || !root.manageable(w)) {
+                    if (hook)
+                        hook.restoring = false;
+                    root.pendingRestores.splice(i, 1);
+                    continue;
+                }
+                if (now >= job.steps[job.stepIdx]) {
+                    if (job.plan.max ? w.maximizeMode !== 3 : !G.sameRect(root.rect(w.frameGeometry), job.plan.rect, 2))
+                        root.applyRestore(w, job.plan);
+                    job.stepIdx++;
+                    if (job.stepIdx >= job.steps.length) {
+                        hook.restoring = false;
+                        root.records[job.id] = job.rec;
+                        root.pendingRestores.splice(i, 1);
+                    }
+                }
+            }
+            if (root.pendingRestores.length === 0)
+                restoreTimer.stop();
+        }
     }
 
     Connections {
         target: Workspace
         function onWindowAdded(w) {
-            root.addWindow(w, true);
-            if (root.cfg.remember && root.manageable(w) && root.memory[String(w.resourceClass)])
-                Qt.callLater(root.restore, w);
+            root.addWindow(w);
+            root.restoreOnAdded(w);
         }
         function onWindowRemoved(w) {
             const id = root.idOf(w), hook = root.hooks[id];
+            root.removePendingRestore(id);
             if (hook)
                 hook.destroy();
             delete root.hooks[id];
@@ -425,7 +659,6 @@ Item {
         }
     }
 
-    // Emitted after KWin re-reads kwinrc (Workspace::slotReconfigure, kwin src/workspace.cpp:1025-1038).
     Connections {
         target: Options
         function onConfigChanged() {
@@ -438,22 +671,31 @@ Item {
         try {
             loadConfig();
             try {
-                const m = JSON.parse(state.memory) || {}, n = JSON.parse(state.naturals) || {};
-                for (const k in m) { // drops records an older pafta wrote ({ layout, zone })
-                    if (m[k].max || G.validFrac(m[k].frac))
-                        memory[k] = m[k];
-                }
-                for (const k in n) {
-                    if (n[k].width > 0 && n[k].height > 0)
-                        naturals[k] = n[k];
+                lastSavedJson = state.memory || "{}";
+                const m = JSON.parse(lastSavedJson) || {};
+                for (const k in m) {
+                    if (cfg.exceptions.indexOf(k) < 0 && (m[k].max || G.validFrac(m[k].frac))) {
+                        const entry = {
+                            max: !!m[k].max,
+                            frac: m[k].frac,
+                            output: m[k].output || "",
+                            ts: m[k].ts || 0
+                        };
+                        if (m[k].rel && typeof m[k].rel.width === "number" && typeof m[k].rel.height === "number") {
+                            entry.rel = m[k].rel;
+                            entry.areaW = m[k].areaW || 0;
+                            entry.areaH = m[k].areaH || 0;
+                        }
+                        memory[k] = entry;
+                    }
                 }
             } catch (e) {
                 warn("could not parse the state file: " + e);
             }
             for (const w of Workspace.stackingOrder)
-                addWindow(w, false);
-            console.info("pafta: loaded; compass " + cfg.compassSize + " " + cfg.compass.rings.join("/") + ", opens after "
-                + cfg.dwellMs + " ms, state " + state.location);
+                addWindow(w);
+            console.info("pafta: loaded; layout " + JSON.stringify(cfg.layout) + ", compass " + cfg.compassSize
+                + ", state " + state.location);
         } catch (e) {
             warn("startup failed: " + e + "\n" + e.stack);
         }

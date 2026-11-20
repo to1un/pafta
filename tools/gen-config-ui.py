@@ -7,12 +7,8 @@ import base64, html, os, subprocess, xml.dom.minidom
 
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
 
-# The compass as drawn while dragging, from the same geometry (tools/compass-svg.js), with the
-# ½ ring on the east hovered. One per compassCorners choice, in main.xml order.
-CORNERS = ["off", "quarters", "rings"]
-
-def img(corners):
-    svg = subprocess.run(["node", os.path.join(ROOT, "tools", "compass-svg.js"), "large", corners, "e1", "½ right"],
+def compass_img():
+    svg = subprocess.run(["node", os.path.join(ROOT, "tools", "compass-svg.js"), "large", "w", "Left 60%", "60"],
                          check=True, capture_output=True, text=True).stdout
     b = base64.b64encode(svg.encode()).decode()
     return html.escape('<img src="data:image/svg+xml;base64,%s">' % b)
@@ -20,10 +16,8 @@ def img(corners):
 def esc(s):
     return html.escape(s, quote=False)
 
-def label(text, wrap=False, rich=False):
+def label(text, wrap=False):
     out = '<widget class="QLabel"><property name="text"><string>%s</string></property>' % esc(text)
-    if rich:
-        out += '<property name="textFormat"><enum>Qt::RichText</enum></property>'
     if wrap:
         out += '<property name="wordWrap"><bool>true</bool></property>'
     return out + '</widget>'
@@ -36,10 +30,8 @@ def combo(name, items, tip=None):
         out += '<item><property name="text"><string>%s</string></property></item>' % esc(i)
     return out + '</widget>'
 
-def spin(name, lo, hi, step, suffix, special=None, tip=None):
+def spin(name, lo, hi, step, suffix, tip=None):
     extra = ''
-    if special:
-        extra += '<property name="specialValueText"><string>%s</string></property>' % esc(special)
     if tip:
         extra += '<property name="toolTip"><string>%s</string></property>' % esc(tip)
     return ('<widget class="QSpinBox" name="kcfg_%s"><property name="minimum"><number>%d</number></property>'
@@ -68,56 +60,44 @@ def tab(name, title, body):
             '<layout class="QVBoxLayout" name="%sLayout">%s<item><spacer name="%sSpacer"><property name="orientation">'
             '<enum>Qt::Vertical</enum></property><property name="sizeHint"><size><width>0</width><height>0</height></size></property></spacer></item></layout></widget>') % (name, esc(title), name, body, name)
 
-SLOTS = ["Own size, centered", "Centered window", "Fill the screen (not maximized)", "Maximize", "Top half", "Bottom half", "Nothing"]
-
-compass_form = form("compassForm", [
-    ("Opens after:", spin("dwellMs", 0, 1000, 50, " ms", "Immediately",
-                          "How long the cursor rests before the compass opens. Immediately: as soon as you grab the window, once per drag.")),
-    ("Size:", combo("compassSize", ["Small", "Medium", "Large"])),
-    ("Center:", combo("compassCenter", SLOTS)),
-    ("North:", combo("compassNorth", SLOTS)),
-    ("South:", combo("compassSouth", SLOTS)),
-    ("West and east:", '<widget class="QLineEdit" name="kcfg_compassRings"><property name="toolTip"><string>Widths in percent, one to four, narrowest nearest the center.</string></property>'
-                       '<property name="placeholderText"><string>33, 50, 67</string></property><property name="maximumWidth"><number>140</number></property></widget>'),
-    ("Diagonals:", combo("compassCorners", ["Off", "Corner quarters", "Corner quarters in the widths above"])),
-    ("Centered window:", '<layout class="QHBoxLayout" name="centeredRow"><item>%s</item><item>%s</item><item>%s</item>'
-                         '<item><spacer name="centeredSpacer"><property name="orientation"><enum>Qt::Horizontal</enum></property><property name="sizeHint"><size><width>0</width><height>0</height></size></property></spacer></item></layout>'
-                         % (spin("centeredWidth", 10, 100, 5, " %", tip="Width"), label("×"), spin("centeredHeight", 10, 100, 5, " %", tip="Height"))),
-], compact=True)
-
-help_text = label("Grab a window and the compass opens around the cursor; drop on a slot to place the window. "
-                  "Own size is the size the application first opened with, or the size you last gave it by hand. "
-                  "Move away from the compass and drop to leave the window where it is; Esc cancels the move.", wrap=True
-                  ).replace('</widget>', '<property name="maximumWidth"><number>440</number></property></widget>')
-
 def stretch(name, orientation):
     return ('<item><spacer name="%s"><property name="orientation"><enum>Qt::%s</enum></property>'
             '<property name="sizeHint"><size><width>0</width><height>0</height></size></property></spacer></item>') % (name, orientation)
 
-# Compass and form as one block, centered in the tab both ways (tab() adds the bottom stretch).
-compass_body = (stretch("compassTop", "Vertical")
-                + '<item><layout class="QHBoxLayout" name="compassRow">'
-                + stretch("compassLeft", "Horizontal")
-                # The Diagonals choice flips the page (see `connections` below).
-                + '<item><widget class="QStackedWidget" name="compassPreview">'
-                + "".join(('<widget class="QLabel" name="compassPreview_%s"><property name="text"><string>%s</string></property>'
-                           '<property name="alignment"><set>Qt::AlignVCenter|Qt::AlignHCenter</set></property></widget>') % (c, img(c))
-                          for c in CORNERS)
-                + '</widget></item>'
-                + '<item><spacer name="compassGap"><property name="orientation"><enum>Qt::Horizontal</enum></property>'
-                  '<property name="sizeType"><enum>QSizePolicy::Fixed</enum></property><property name="sizeHint"><size><width>24</width><height>0</height></size></property></spacer></item>'
-                + '<item><layout class="QVBoxLayout" name="compassSide">' + stretch("sideTop", "Vertical")
-                + '<item>%s</item><item>%s</item>' % (compass_form, help_text) + stretch("sideBottom", "Vertical") + '</layout></item>'
-                + stretch("compassRight", "Horizontal")
-                + '</layout></item>')
+layout_form = form("layoutForm", [
+    ("Left split:", spin("split", 25, 75, 5, " %", "Left column percentage; right column uses the remainder.")),
+    ("Outer left / right (X):", spin("outerX", 0, 80, 2, " px", "Horizontal margin against the left and right screen edges.")),
+    ("Outer top / bottom (Y):", spin("outerY", 0, 80, 2, " px", "Vertical margin against the top and bottom screen edges.")),
+    ("Inner gap:", spin("innerGap", 0, 60, 2, " px", "Gap between Left and Right columns.")),
+    ("Center size:", '<layout class="QHBoxLayout" name="centeredRow"><item>%s</item><item>%s</item><item>%s</item>'
+                     '<item><spacer name="centeredSpacer"><property name="orientation"><enum>Qt::Horizontal</enum></property><property name="sizeHint"><size><width>0</width><height>0</height></size></property></spacer></item></layout>'
+                     % (spin("centerWidth", 20, 95, 2, " %", "Center box width"), label("×"), spin("centerHeight", 20, 95, 2, " %", "Center box height"))),
+    ("Compass size:", combo("compassSize", ["Small", "Medium", "Large"])),
+], compact=True)
+
+help_text = label("Drag any window freely anywhere on screen. Pull to the top edge to open the 4-sector compass "
+                  "(West = Left split, East = Right split, North = Fill, South = Center, Hub = Free). "
+                  "Pull down to dismiss, or use Meta+Left / Meta+Right / Meta+Up / Meta+Down.", wrap=True
+                  ).replace('</widget>', '<property name="maximumWidth"><number>440</number></property></widget>')
+
+layout_body = (stretch("compassTop", "Vertical")
+               + '<item><layout class="QHBoxLayout" name="compassRow">'
+               + stretch("compassLeft", "Horizontal")
+               + '<item><widget class="QLabel" name="compassPreview"><property name="text"><string>%s</string></property>'
+                 '<property name="alignment"><set>Qt::AlignVCenter|Qt::AlignHCenter</set></property></widget></item>' % compass_img()
+               + '<item><spacer name="compassGap"><property name="orientation"><enum>Qt::Horizontal</enum></property>'
+                 '<property name="sizeType"><enum>QSizePolicy::Fixed</enum></property><property name="sizeHint"><size><width>24</width><height>0</height></size></property></spacer></item>'
+               + '<item><layout class="QVBoxLayout" name="compassSide">' + stretch("sideTop", "Vertical")
+               + '<item>%s</item><item>%s</item>' % (layout_form, help_text) + stretch("sideBottom", "Vertical") + '</layout></item>'
+               + stretch("compassRight", "Horizontal")
+               + '</layout></item>')
 
 behavior_body = '<item>%s</item><item>%s</item>' % (form("behaviorForm", [
     (None, check("remember", "Remember where applications were placed",
-                 "When an application closes, its tile, position or maximized state is saved and restored the next time it opens.")),
-    (None, check("restoreMaximized", "Un-maximize windows to where they were, back into their tile")),
+                 "Saves moves, resizes, slots, and maximized states immediately and restores the app's first window on Wayland.")),
+    (None, check("restoreMaximized", "Un-maximize windows back to their previous position")),
     (None, check("debug", "Debug logging")),
-]), label("Layouts come from Plasma: press Meta+T to draw the tiles of each virtual desktop, and drag with Shift to drop "
-          "a window into them. The compass never puts windows into tiles, so they stay free to resize.", wrap=True))
+]), label("pafta uses its own frameGeometry layout and never modifies Plasma Meta+T tiles.", wrap=True))
 
 exceptions_body = '<item>%s</item><item>%s</item>' % (
     label("Window classes pafta leaves alone, one per line:", wrap=True),
@@ -130,14 +110,11 @@ ui = ('<?xml version="1.0" encoding="UTF-8"?>\n'
       '<widget class="QWidget" name="KWin::PaftaConfigForm"><layout class="QVBoxLayout" name="mainLayout">'
       '<item><widget class="QTabWidget" name="tabs">%s%s%s</widget></item>'
       '<item>%s</item>'
-      '</layout></widget><resources/><connections>'
-      '<connection><sender>kcfg_compassCorners</sender><signal>currentIndexChanged(int)</signal>'
-      '<receiver>compassPreview</receiver><slot>setCurrentIndex(int)</slot></connection>'
-      '</connections></ui>\n') % (
-    tab("compassTab", "Compass", compass_body),
+      '</layout></widget><resources/><connections/></ui>\n') % (
+    tab("layoutTab", "Layout && Compass", layout_body),
     tab("behaviorTab", "Behavior", behavior_body),
     tab("exceptionsTab", "Exceptions", exceptions_body),
-    label("Changes apply to the next drag.", wrap=True))
+    label("Changes apply on the next drag or shortcut.", wrap=True))
 
 body = xml.dom.minidom.parseString(ui).toprettyxml(indent="  ").split("\n", 1)[1]
 lines = [l for l in body.splitlines() if l.strip() and not l.strip().startswith("<!-- SPDX")]

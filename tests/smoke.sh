@@ -54,6 +54,28 @@ if ! diff <(echo "$ui_names") <(echo "$xml_names") > "$WORK/kcfg.diff"; then
 fi
 ok "kcfg_* widgets == main.xml entries ($(echo "$ui_names" | wc -l) names)"
 
+command -v node >/dev/null || fail "node not found"
+node -e '
+const fs = require("node:fs");
+for (const file of process.argv.slice(1)) {
+    const raw = fs.readFileSync(file, "utf8").replace(/<\?[\s\S]*?\?>/g, "").replace(/<!--[\s\S]*?-->/g, "");
+    const stack = [];
+    for (const m of raw.matchAll(/<(\/?)([A-Za-z_][\w:.-]*)([^>]*?)(\/?)>/g)) {
+        if (m[1]) {
+            const top = stack.pop();
+            if (top !== m[2]) { console.error(file + ": mismatched </" + m[2] + "> expected </" + top + ">"); process.exit(1); }
+        } else if (!m[4]) {
+            stack.push(m[2]);
+        }
+    }
+    if (stack.length || raw.replace(/<[^>]+>/g, "").search(/[<>]/) !== -1) {
+        console.error(file + ": malformed XML");
+        process.exit(1);
+    }
+}
+' "$PKG/contents/config/main.xml" "$PKG/contents/ui/config.ui" || fail "XML well-formedness check failed"
+ok "main.xml and config.ui are well-formed XML"
+
 # ---- headless KWin ---------------------------------------------------------------------
 
 for t in kwin_wayland dbus-run-session; do
