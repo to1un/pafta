@@ -1,10 +1,10 @@
 # pafta
 
-A compass for placing windows while you drag them: a KWin script for KDE Plasma 6.
+Top-edge compass picker, `Meta+Arrow` tiling, and per-app window memory for KDE Plasma 6.
 
-![pafta demo: windows dropped on the compass fill the screen, take a third or two thirds, and go back to their own size](docs/demo.gif)
+![pafta demo: free mini-window drag, top-edge compass placing Left 60%, Right 40%, Fill, and Meta+Down Center](docs/demo.gif)
 
-Grab a window and the compass opens under the cursor. Drop it on a slot and the window takes that place; move away and drop to leave it where it is. Plasma's own tiles (Meta+T, Shift+drag) are left as they are.
+Drag any window freely anywhere on screen — nothing pops up when you pause or move mini windows. Pull a window up to the screen's top edge to open the 4-sector compass right above your cursor, or use `Meta+Arrow` shortcuts to snap immediately. Plasma's native `Meta+T` tiles are left untouched.
 
 ## Requirements
 
@@ -18,7 +18,7 @@ git clone https://github.com/to1un/pafta
 kpackagetool6 --type=KWin/Script --install pafta/package
 ```
 
-Tick **pafta** in *System Settings → Window Management → KWin Scripts* and press Apply.
+Enable **pafta** in *System Settings → Window Management → KWin Scripts* and click Apply.
 
 Update:
 
@@ -27,7 +27,7 @@ cd pafta && git pull
 kpackagetool6 --type=KWin/Script --upgrade package
 ```
 
-KWin keeps running the old code until you log out and back in.
+Reload KWin (or log out and back in) after upgrading.
 
 Uninstall: untick pafta in KWin Scripts, then
 
@@ -35,25 +35,23 @@ Uninstall: untick pafta in KWin Scripts, then
 kpackagetool6 --type=KWin/Script --remove pafta
 ```
 
-pafta keeps remembered placements and each application's own size in `~/.local/share/pafta/state.ini`; delete it if you no longer need it.
+pafta stores remembered window placements in `~/.local/share/pafta/state.ini`; delete it if you no longer need it.
 
 ## Usage
 
-| Slot | Default |
-|---|---|
-| North | Fill the screen (not maximized) |
-| South | Centered window, 70 × 75 % |
-| West, east | ⅓, ½ and ⅔ of the width, full height, from the hub outwards |
-| Diagonals | Corner quarters |
-| Hub | Own size: the size the application first opened with, or the last size you gave it by hand |
+| Compass / Shortcut | Action | Default |
+|---|---|---|
+| West (`W`) · `Meta+Left` | Left column | `60%` |
+| East (`E`) · `Meta+Right` | Right column | `40%` |
+| North (`N`) · `Meta+Up` | Fill work area (with outer padding) | `Fill` |
+| South (`S`) · `Meta+Down` | Centered floating box | `52% × 72%` |
+| Hub (`Free`) / Pull down | Dismiss and leave freely placed | — |
 
-Esc during the drag cancels the move. When an application closes, pafta remembers where it was placed and puts it back the next time it opens; un-maximized windows return to where they were.
+Every move, resize, slot snap, and maximize state is saved per application and restored synchronously when the application reopens on Wayland.
 
-Settings are in *KWin Scripts → pafta → configure*: when the compass opens (immediately, or after the cursor rests), its size, what the hub, north and south do, the side widths, diagonals and the centered size, plus applications to leave alone. Changes apply to the next drag.
+Settings live in *System Settings → Window Management → KWin Scripts → pafta*: `Left split`, independent `Outer left / right (X)`, `Outer top / bottom (Y)`, `Inner gap`, `Center size`, `Compass size`, window memory, and `Exceptions`. Changes apply on the next drag or shortcut.
 
-![pafta settings: the compass beside its options](docs/config.png)
-
-KWin scripts cannot read modifier keys during a window move, so the compass opens by mouse only.
+![pafta settings: the 4-sector compass beside layout and padding controls](docs/config.png)
 
 ## License
 
