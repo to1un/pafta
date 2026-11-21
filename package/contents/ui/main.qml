@@ -110,6 +110,17 @@ Item {
         return Workspace.screens.find(o => o.name === name) || null;
     }
 
+    // Memory key, fixed when the window appears: the class for an app's first window, and
+    // class + title for a further window of the same app (e.g. Telegram's "Media viewer"),
+    // so secondary windows keep their own place and never overwrite the main window's.
+    property var memKeys: ({})          // window id -> memory key
+    function keyOf(w) {
+        const id = idOf(w);
+        if (!memKeys[id])
+            memKeys[id] = hasSibling(w) ? String(w.resourceClass) + "::" + String(w.caption) : String(w.resourceClass);
+        return memKeys[id];
+    }
+
     function hasSibling(w) {
         const cls = String(w.resourceClass);
         for (const id in hooks) {
@@ -169,7 +180,7 @@ Item {
             return;
         records[idOf(w)] = rec;
         if (cfg.remember && w.resourceClass) {
-            memory[String(w.resourceClass)] = rec;
+            memory[keyOf(w)] = rec;
             if (flushNow)
                 saveMemory();
             else
@@ -257,10 +268,10 @@ Item {
     function restoreNow(w) {
         if (!cfg.remember || !w || w.deleted || !manageable(w) || !w.resourceClass)
             return;
-        const cls = String(w.resourceClass);
+        const cls = keyOf(w);
         const rec = memory[cls];
         const id = idOf(w), hook = hooks[id];
-        if (!rec || !hook || hook.userTouched || hasSibling(w))
+        if (!rec || !hook || hook.userTouched)
             return;
         const plan = computeRestorePlan(rec, w);
         if (!plan)
@@ -533,9 +544,10 @@ Item {
                 && !w.skipTaskbar && w.moveable && w.resizeable && cfg.exceptions.indexOf(String(w.resourceClass)) < 0) {
             const rec = snapshotOf(w) || records[id];
             if (rec && cfg.remember && w.resourceClass) {
-                memory[String(w.resourceClass)] = rec;
+                const key = keyOf(w);
+                memory[key] = rec;
                 saveMemory();
-                log("remembered on close " + w.resourceClass + " -> " + JSON.stringify(rec));
+                log("remembered on close " + key + " -> " + JSON.stringify(rec));
             }
         }
     }
@@ -656,6 +668,7 @@ Item {
                 hook.destroy();
             delete root.hooks[id];
             delete root.records[id];
+            delete root.memKeys[id];
         }
     }
 
